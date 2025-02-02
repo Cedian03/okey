@@ -1,0 +1,22 @@
+[package]
+name = "okey"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+embassy-executor = { version = "0.7.0", features = ["arch-cortex-m", "executor-thread", "executor-interrupt"] }
+embassy-futures = "0.1.1"
+embassy-time = "0.4.0"
+embassy-usb = "0.4.0"
+embassy-usb-driver = "0.1.0"
+embedded-hal = "1.0.0"
+
+[profile.release]
+debug = 2
+lto = true
+opt-level = 'z'
+
+[profile.dev]
+debug = 2
+lto = true
+opt-level = "z"

@@ -1,0 +1,15 @@
+[package]
+name = "rp2040"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+okey = { path = "../../" }
+
+embassy-executor = { version = "0.7.0", features = ["executor-thread", "executor-interrupt"] }
+embassy-rp = { version = "0.3.0", features = ["rp2040", "critical-section-impl", "time-driver"] }
+
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+
+panic-probe = "0.3.2"
