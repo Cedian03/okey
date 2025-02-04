@@ -1,5 +1,7 @@
+mod direct;
 mod matrix;
 
+pub use direct::Direct;
 pub use matrix::Matrix;
 
 pub trait KeyScan<const W: usize, const H: usize> {
