@@ -1,18 +1,19 @@
 #![no_std]
 #![no_main]
 
+pub mod action;
+pub mod config;
+pub mod keycode;
+pub mod report;
+pub mod scan;
+pub mod usb;
+
 use embassy_futures::join::join3;
 use embassy_usb::{class::hid::{HidReaderWriter, State}, Builder};
 use embassy_usb_driver::Driver;
 
-pub mod usb;
-pub mod keycode;
-pub mod config;
-pub mod scan;
-pub mod report;
-
+use action::Action;
 use config::Config;
-use keycode::KeyCode;
 use scan::KeyScan;
 use report::Report;
 use usb::handlers::{OkeyDeviceHandler, OkeyRequestHandler};
@@ -44,25 +45,30 @@ impl<'a> Default for Buffers<'a> {
 pub struct Keyboard<S, const W: usize, const H: usize>
 {
     scanner: S,
-    map: [[KeyCode; W]; H],
+    action_map: [[Option<Action>; W]; H],
+    current_action: [[Option<Action>; W]; H], 
+
+    report: Report,
 }
 
-impl<'a, S, const W: usize, const H: usize> Keyboard<S, W, H>
+impl<'d, S, const W: usize, const H: usize> Keyboard<S, W, H>
 where
     S: KeyScan<W, H> 
 {
-    pub fn new(scanner: S, map: [[KeyCode; W]; H]) -> Self {
+    pub fn new(scanner: S, map: [[Option<Action>; W]; H]) -> Self {
         Self {
             scanner,
-            map,
+            action_map: map,
+            current_action: [[None; W]; H],
+            report: Report::default(),
         }
     }
 
-    pub async fn run<D: Driver<'a>>(
+    pub async fn run<D: Driver<'d>>(
         mut self, 
-        config: Config<'a>, 
+        config: Config<'d>, 
         driver: D, 
-        bufs: &'a mut Buffers<'a>
+        bufs: &'d mut Buffers<'d>
     ) -> ! {
         let mut builder = Builder::new(
             driver,
@@ -84,49 +90,79 @@ where
         let usb_fut = usb.run();
     
         let in_fut = async {
+            let mut scan = [[false; W]; H];
+            let mut last_scan = [[false; W]; H];
+            
             loop {
-                let mut scan = [[false; W]; H]; 
-                self.scanner.scan(&mut scan).await;
-                let report = self.report(scan);
-                let _ = writer.write(report.as_slice()).await;
+                self.scanner.scan(&mut scan).await; 
+
+                for y in 0..H {
+                    for x in 0..W {
+                        if scan[y][x] != last_scan[y][x] {
+                            self.handle_key_event(x, y, scan[y][x]);
+                        }
+                    }
+                }
+
+                let _ = writer.write(self.report.as_slice()).await;
+
+                last_scan = scan;
             }
         };
     
         let out_fut = reader.run(false, &mut bufs.request_handler);
     
         let _ = join3(usb_fut, in_fut, out_fut).await;
-
+        
         panic!()
     }
 
-    fn report(&self, scan: [[bool; W]; H]) -> Report {
-        let mut modifiers = 0;
-        let mut keycodes = [KeyCode::NoEvent; 6];
-        let mut count = 0;
+    fn handle_key_event(&mut self, x: usize, y: usize, pressed: bool) {
+        if pressed {
+            self.handle_key_pressed(x, y)
+        } else {
+            self.handle_key_released(x, y)
+        }
+    }
 
-        'outer: for (x, row) in scan.into_iter().enumerate() {
-            for (y, key) in row.into_iter().enumerate() {
-                if !key {
-                    continue;
-                }
+    fn handle_key_pressed(&mut self, x: usize, y: usize) {
+        if let Some(action) = self.action_map[y][x] {
+            assert!(
+                self.current_action[y][x].replace(action).is_none(), 
+                "Key ({}, {}) pressed twice without being relesed inbetween", x, y
+            );
 
-                let code = self.map[y][x];
-
-                if let Some(mask) = code.modifier_mask() {
-                    modifiers |= mask;
-                    continue;
-                }
-
-                if count >= keycodes.len() {
-                    keycodes.fill(KeyCode::RollOverError);
-                    break 'outer;
-                }
-    
-                keycodes[count] = code;
-                count += 1;
+            match action {
+                Action::Key(code) => {
+                    if let Some(mask) = code.modifier_mask() {
+                        self.report.register_modifier(mask);
+                    } else {
+                        let _ = self.report.register_code(code);
+                    }
+                },
             }
         }
 
-        Report::new(modifiers, keycodes)
+        // TODO: assert that keys with no action are registered correctly
+    }
+
+    fn handle_key_released(&mut self, x: usize, y: usize) {
+        if let Some(action) = self.pop(x, y) {
+            match action {
+                Action::Key(code) => {
+                    if let Some(mask) = code.modifier_mask() {
+                        self.report.unregister_modifier(mask);
+                    } else {
+                        let _ = self.report.unregister_code(code);
+                    }
+                },
+            }
+        }
+
+        // TODO: assert that keys with no action are registered correctly
+    }
+
+    fn pop(&mut self, x: usize, y: usize) -> Option<Action> {
+        self.current_action[y][x].take()
     }
 }
