@@ -2,9 +2,21 @@
 #![no_main]
 
 use embassy_executor::Spawner;
-use embassy_rp::{bind_interrupts, gpio::{Input, Level, Output, Pull}, peripherals::USB, usb::{Driver, InterruptHandler}};
 
-use okey::{action::Action, config::Config, keycode::KeyCode, scan::Matrix, Keyboard};
+use embassy_rp::{
+    bind_interrupts, 
+    gpio::{Input, Level, Output, Pull}, 
+    peripherals::USB, 
+    usb::{Driver, InterruptHandler},
+};
+
+use okey::{
+    Keyboard,
+    action::Action,
+    config::Config,
+    keycode::KeyCode,
+    scan::Matrix,
+};
 
 use panic_probe as _;
 
@@ -29,8 +41,14 @@ async fn main(_spawner: Spawner) {
     ];
 
     let map = [
-        [Some(Action::Key(KeyCode::KeyboardA)), Some(Action::Key(KeyCode::KeyboardB))],
-        [Some(Action::Key(KeyCode::KeyboardC)), Some(Action::Key(KeyCode::Space))    ],
+        [
+            [Some(Action::Key(KeyCode::KeyboardA)), Some(Action::Key(KeyCode::KeyboardB))],
+            [Some(Action::Key(KeyCode::KeyboardC)), Some(Action::ToggleLayer(1))         ],
+        ],
+        [
+            [Some(Action::Key(KeyCode::KeyboardX)), Some(Action::Key(KeyCode::KeyboardY))],
+            [Some(Action::Key(KeyCode::KeyboardZ)), Some(Action::ToggleLayer(1))         ],
+        ],
     ];
 
     let config = Config::new(0xC3DD, 0x0000);
