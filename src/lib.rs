@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+pub mod prelude;
+
 pub mod action;
 pub mod action_map;
 pub mod config;
@@ -8,6 +10,7 @@ pub mod keycode;
 pub mod report;
 pub mod scan;
 pub mod usb;
+
 
 use embassy_futures::join::join3;
 use embassy_usb::{class::hid::{HidReaderWriter, State}, Builder};

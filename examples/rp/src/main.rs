@@ -10,13 +10,7 @@ use embassy_rp::{
     usb::{Driver, InterruptHandler},
 };
 
-use okey::{
-    Keyboard,
-    action::Action,
-    config::Config,
-    keycode::KeyCode,
-    scan::Matrix,
-};
+use okey::prelude::*;
 
 use panic_probe as _;
 
