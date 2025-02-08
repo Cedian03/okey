@@ -4,7 +4,7 @@
 use embassy_executor::Spawner;
 use embassy_rp::{bind_interrupts, gpio::{Input, Level, Output, Pull}, peripherals::USB, usb::{Driver, InterruptHandler}};
 
-use okey::{config::Config, keycode::KeyCode, scan::Matrix, Buffers, Keyboard};
+use okey::{action::Action, config::Config, keycode::KeyCode, scan::Matrix, Keyboard};
 
 use panic_probe as _;
 
@@ -12,10 +12,10 @@ bind_interrupts!(struct Irqs {
     USBCTRL_IRQ => InterruptHandler<USB>;
 });
 
-
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
+    
     let driver = Driver::new(p.USB, Irqs);
 
     let cols = [
@@ -24,17 +24,18 @@ async fn main(_spawner: Spawner) {
     ];
 
     let rows = [
-        Input::new(p.PIN_10, Pull::None),
-        Input::new(p.PIN_11, Pull::None),
+        Input::new(p.PIN_10, Pull::Down),
+        Input::new(p.PIN_11, Pull::Down),
     ];
 
     let map = [
-        [KeyCode::KeyboardA, KeyCode::KeyboardB],
-        [KeyCode::KeyboardC, KeyCode::KeyboardD],
+        [Some(Action::Key(KeyCode::KeyboardA)), Some(Action::Key(KeyCode::KeyboardB))],
+        [Some(Action::Key(KeyCode::KeyboardC)), Some(Action::Key(KeyCode::Space))    ],
     ];
 
     let config = Config::new(0xC3DD, 0x0000);
     
-    let keyboard = Keyboard::new(Matrix::new(cols, rows), map);
+    let keyboard = Keyboard::new(Matrix::col2row(cols, rows), map);
+
     keyboard.run(config, driver, &mut Default::default()).await;
 }
