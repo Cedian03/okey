@@ -130,34 +130,34 @@ where
     }
 
     fn handle_key_pressed(&mut self, x: usize, y: usize) {
-        if let Some(action) = self.action_map.get(x, y) {
-            assert!(
-                self.current_action[y][x].replace(action).is_none(), 
-                "Key ({}, {}) pressed twice without being relesed inbetween", x, y
-            );
+        let action = self.action_map.get(x, y);
 
-            match action {
-                Action::Key(code) => {
-                    let _ = self.report.register_code(code);
-                }
-                Action::Modifier(modifier) => {
-                    self.report.register_modifier(modifier)
-                }
-                Action::MomentaryLayer(layer) => {
-                    self.action_map.set_layer(layer)
-                }
-                Action::ToggleLayer(layer) => {
-                    self.action_map.toggle_layer(layer)
-                }
+        assert!(
+            self.replace_action(x, y, action).is_none(), 
+            "Key ({}, {}) pressed twice without being relesed inbetween", x, y
+        );
+
+        match action {
+            Action::NoAction => {}
+            Action::Key(code) => {
+                let _ = self.report.register_code(code);
+            }
+            Action::Modifier(modifier) => {
+                self.report.register_modifier(modifier)
+            }
+            Action::MomentaryLayer(layer) => {
+                self.action_map.set_layer(layer)
+            }
+            Action::ToggleLayer(layer) => {
+                self.action_map.toggle_layer(layer)
             }
         }
-
-        // TODO: assert that keys with no action are registered correctly
     }
 
     fn handle_key_released(&mut self, x: usize, y: usize) {
-        if let Some(action) = self.pop(x, y) {
+        if let Some(action) = self.take_action(x, y) {
             match action {
+                Action::NoAction => {}
                 Action::Key(code) => {
                     let _ = self.report.unregister_code(code);
                 }
@@ -169,12 +169,16 @@ where
                 }
                 Action::ToggleLayer(_) => {}
             }
+        } else {
+            panic!("Key ({}, {}) released without being pressed", x, y)
         }
-
-        // TODO: assert that keys with no action are registered correctly
     }
 
-    fn pop(&mut self, x: usize, y: usize) -> Option<Action> {
+    fn replace_action(&mut self, x: usize, y: usize, action: Action) -> Option<Action> {
+        self.current_action[y][x].replace(action)
+    }
+
+    fn take_action(&mut self, x: usize, y: usize) -> Option<Action> {
         self.current_action[y][x].take()
     }
 }

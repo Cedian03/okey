@@ -12,13 +12,11 @@ impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H, D> {
         Self { layers: map, active_layers: 1 }
     }
 
-    pub fn get(&self, x: usize, y: usize) -> Option<Action> {
+    pub fn get(&self, x: usize, y: usize) -> Action {
         (0..D)
             .rev()
-            .filter(|&z| self.is_active(z as u8))
-            .next()
-            .map(|z| self.index(x, y, z))
-            .flatten()
+            .find_map(|z| self.is_active(z as u8).then(|| self.index(x, y, z)).flatten())
+            .unwrap_or_default()
     }
 
     fn index(&self, x: usize, y: usize, z: usize) -> Option<Action> {

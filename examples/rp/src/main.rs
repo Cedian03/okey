@@ -40,8 +40,8 @@ async fn main(_spawner: Spawner) {
             [Some(Action::Modifier(Modifier::LeftControl)), Some(Action::ToggleLayer(1))     ],
         ],
         [
-            [Some(Action::Key(Key::KeyboardX)),             Some(Action::Key(Key::KeyboardY))],
-            [Some(Action::Modifier(Modifier::LeftShift)),   Some(Action::ToggleLayer(1))     ],
+            [Some(Action::Key(Key::KeyboardX)),             Some(Action::NoAction)           ],
+            [None,                                          Some(Action::ToggleLayer(1))     ],
         ],
     ];
 
