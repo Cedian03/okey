@@ -1,4 +1,4 @@
-use crate::keycode::KeyCode;
+use crate::action::{Key, Modifier};
 
 pub struct ReportError;
 
@@ -13,7 +13,7 @@ impl Report {
         self.inner.as_slice()
     }
 
-    pub fn register_code(&mut self, code: KeyCode) -> Result<(), ReportError> {
+    pub fn register_code(&mut self, code: Key) -> Result<(), ReportError> {
         if self.len >= self.inner.codes.len() {
             return Err(ReportError)
         }
@@ -24,7 +24,7 @@ impl Report {
         Ok(())
     }
 
-    pub fn unregister_code(&mut self, code: KeyCode) -> Result<(), ReportError> {
+    pub fn unregister_code(&mut self, code: Key) -> Result<(), ReportError> {
         let mut i = 0;
 
         while i < self.len && self.inner.codes[i] != code {
@@ -40,17 +40,17 @@ impl Report {
         }
 
         self.len -= 1;
-        self.inner.codes[self.len] = KeyCode::NoEvent;
+        self.inner.codes[self.len] = Key::NoEvent;
 
         Ok(())
     }
 
-    pub fn register_modifier(&mut self, mask: u8) {
-        self.inner.modifiers |= mask;
+    pub fn register_modifier(&mut self, modifier: Modifier) {
+        self.inner.modifiers |= modifier.mask();
     }
 
-    pub fn unregister_modifier(&mut self, mask: u8) {
-        self.inner.modifiers &= !mask;
+    pub fn unregister_modifier(&mut self, modifier: Modifier) {
+        self.inner.modifiers &= !modifier.mask();
     }
 }
 
@@ -59,7 +59,7 @@ impl Report {
 struct Inner {
     modifiers: u8,
     _reserved: u8,
-    codes: [KeyCode; 6]
+    codes: [Key; 6]
 }
 
 impl Inner {
@@ -78,7 +78,7 @@ impl Default for Inner {
         Self {
             modifiers: 0,
             _reserved: 0,
-            codes: [KeyCode::NoEvent; 6],
+            codes: [Key::NoEvent; 6],
         }
     }
 }

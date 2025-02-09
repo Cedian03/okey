@@ -2,8 +2,7 @@
 
 pub use crate::{
     Keyboard,
-    action::Action,
+    action::{Action, Key, Modifier},
     config::Config,
-    keycode::KeyCode,
     scan::Matrix,
 };

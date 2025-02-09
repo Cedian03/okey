@@ -36,12 +36,12 @@ async fn main(_spawner: Spawner) {
 
     let map = [
         [
-            [Some(Action::Key(KeyCode::KeyboardA)), Some(Action::Key(KeyCode::KeyboardB))],
-            [Some(Action::Key(KeyCode::KeyboardC)), Some(Action::ToggleLayer(1))         ],
+            [Some(Action::Key(Key::KeyboardA)),             Some(Action::Key(Key::KeyboardB))],
+            [Some(Action::Modifier(Modifier::LeftControl)), Some(Action::ToggleLayer(1))     ],
         ],
         [
-            [Some(Action::Key(KeyCode::KeyboardX)), Some(Action::Key(KeyCode::KeyboardY))],
-            [Some(Action::Key(KeyCode::KeyboardZ)), Some(Action::ToggleLayer(1))         ],
+            [Some(Action::Key(Key::KeyboardX)),             Some(Action::Key(Key::KeyboardY))],
+            [Some(Action::Modifier(Modifier::LeftShift)),   Some(Action::ToggleLayer(1))     ],
         ],
     ];
 

@@ -1,11 +1,12 @@
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub enum KeyCode {
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Key {
     /// No event indicated.
     NoEvent = 0x00,
     /// Roll-over error.
     RollOverError = 0x01,
-    // POSTFail = 0x02, // TODO
+    /// Post fail error
+    POSTFail = 0x02,
     /// Undefined error.
     UndefinedError = 0x03,
     /// Keyboard `a` and `A`.
@@ -330,49 +331,5 @@ pub enum KeyCode {
     CrSelProps = 0xA3,
     /// Keyboard `ExSel`. 
     ExSel = 0xA4,
-
-    /// Keyboard `Left Control`.
-    LeftControl = 0xE0,
-    /// Keyboard `Left Shift`.
-    LeftShift = 0xE1,
-    /// Keyboard `Left Alt`.
-    LeftAlt = 0xE2,
-    /// Keyboard `Left GUI`.
-    LeftGUI = 0xE3,
-    /// Keyboard `Right Control`.
-    RightControl = 0xE4,
-    /// Keyboard `Right Shift`.
-    RightShift = 0xE5,
-    /// Keyboard `Right Alt`.
-    RightAlt = 0xE6,
-    /// Keyboard `Right GUI`.
-    RightGUI = 0xE7,
 }
 
-impl KeyCode {
-    pub fn is_error(self) -> bool {
-        (Self::RollOverError..=Self::UndefinedError).contains(&self)
-    }
-
-    pub fn is_modifier(self) -> bool {
-        (Self::LeftControl..=Self::RightGUI).contains(&self)
-    }
-
-    pub fn is_any(self) -> bool {
-        self != Self::NoEvent
-    }
-
-    pub fn modifier_index(self) -> Option<u8> {
-        self.is_modifier().then(|| u8::from(self) & 0x07)        
-    }
-
-    pub fn modifier_mask(self) -> Option<u8> {
-        self.modifier_index().map(|x| 1 << x)
-    }
-}
-
-impl From<KeyCode> for u8 {
-    fn from(value: KeyCode) -> Self {
-        value as u8
-    }
-}

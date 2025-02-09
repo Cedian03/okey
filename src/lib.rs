@@ -6,11 +6,9 @@ pub mod prelude;
 pub mod action;
 pub mod action_map;
 pub mod config;
-pub mod keycode;
 pub mod report;
 pub mod scan;
 pub mod usb;
-
 
 use embassy_futures::join::join3;
 use embassy_usb::{class::hid::{HidReaderWriter, State}, Builder};
@@ -140,12 +138,11 @@ where
 
             match action {
                 Action::Key(code) => {
-                    if let Some(mask) = code.modifier_mask() {
-                        self.report.register_modifier(mask);
-                    } else {
-                        let _ = self.report.register_code(code);
-                    }
-                },
+                    let _ = self.report.register_code(code);
+                }
+                Action::Modifier(modifier) => {
+                    self.report.register_modifier(modifier)
+                }
                 Action::MomentaryLayer(layer) => {
                     self.action_map.set_layer(layer)
                 }
@@ -162,12 +159,11 @@ where
         if let Some(action) = self.pop(x, y) {
             match action {
                 Action::Key(code) => {
-                    if let Some(mask) = code.modifier_mask() {
-                        self.report.unregister_modifier(mask);
-                    } else {
-                        let _ = self.report.unregister_code(code);
-                    }
-                },
+                    let _ = self.report.unregister_code(code);
+                }
+                Action::Modifier(modifier) => {
+                    self.report.unregister_modifier(modifier);
+                }
                 Action::MomentaryLayer(layer) => {
                     self.action_map.unset_layer(layer);
                 }
