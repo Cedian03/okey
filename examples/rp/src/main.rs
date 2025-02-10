@@ -24,30 +24,38 @@ async fn main(_spawner: Spawner) {
     
     let driver = Driver::new(p.USB, Irqs);
 
-    let cols = [
-        Output::new(p.PIN_0, Level::Low),
-        Output::new(p.PIN_1, Level::Low),
-    ];
+    let matrix = {
+        let cols = [
+            Output::new(p.PIN_0, Level::Low),
+            Output::new(p.PIN_1, Level::Low),
+        ];
+    
+        let rows = [
+            Input::new(p.PIN_10, Pull::Down),
+            Input::new(p.PIN_11, Pull::Down),
+        ];
 
-    let rows = [
-        Input::new(p.PIN_10, Pull::Down),
-        Input::new(p.PIN_11, Pull::Down),
-    ];
+        Matrix::col2row(cols, rows)
+    };
 
-    let map = [
+    let map = {
+        use okey::codes::*;
+
         [
-            [Some(Action::Key(Key::KeyboardA)),             Some(Action::Key(Key::KeyboardB))],
-            [Some(Action::Modifier(Modifier::LeftControl)), Some(Action::ToggleLayer(1))     ],
-        ],
-        [
-            [Some(Action::Key(Key::KeyboardX)),             Some(Action::NoAction)           ],
-            [None,                                          Some(Action::ToggleLayer(1))     ],
-        ],
-    ];
+            [
+                [KC_A,    KC_B   ],
+                [KC_C,    TG(1)  ],
+            ],
+            [
+                [KC_1,    KC_2   ],
+                [KC_LCRL, _______],
+            ],
+        ]
+    };
 
     let config = Config::new(0xC3DD, 0x0000);
     
-    let keyboard = Keyboard::new(Matrix::col2row(cols, rows), map);
+    let keyboard = Keyboard::new(matrix, map);
 
     keyboard.run(config, driver, &mut Default::default()).await;
 }

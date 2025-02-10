@@ -6,6 +6,7 @@ pub mod prelude;
 pub mod action;
 pub mod action_map;
 pub mod config;
+pub mod codes;
 pub mod report;
 pub mod scan;
 pub mod usb;
