@@ -9,8 +9,7 @@ pub mod scan;
 pub mod usb;
 
 use embassy_futures::join::join;
-use embassy_usb::{class::hid::HidReaderWriter, Builder};
-use embassy_usb_driver::Driver;
+use embassy_usb::{class::hid::HidReaderWriter, driver::Driver, Builder};
 
 use action::Action;
 use action_map::ActionMap;
