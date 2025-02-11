@@ -9,7 +9,7 @@ pub mod codes;
 pub mod scan;
 pub mod usb;
 
-use embassy_futures::join::join3;
+use embassy_futures::join::join;
 use embassy_usb::{class::hid::HidReaderWriter, Builder};
 use embassy_usb_driver::Driver;
 
@@ -17,6 +17,22 @@ use action::Action;
 use action_map::ActionMap;
 use scan::KeyScan;
 use usb::{Buffers, Config, Report};
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Event {
+    Pressed,
+    Released,
+}
+
+impl From<bool> for Event {
+    fn from(value: bool) -> Self {
+        if value {
+            Self::Pressed
+        } else {
+            Self::Released
+        }
+    }
+}
 
 pub struct Keyboard<S, const W: usize, const H: usize, const D: usize>
 {
@@ -56,49 +72,42 @@ where
             &mut bufs.control_buf,
         );
     
-        builder.handler(&mut bufs.device_handler);
-    
         let hid = HidReaderWriter::<_, 1, 8>::new(&mut builder, &mut bufs.state, config.hid_config);
-    
-        let (reader, mut writer) = hid.split();
+        let (_reader, mut writer) = hid.split();
     
         let mut usb = builder.build();
-    
         let usb_fut = usb.run();
     
-        let in_fut = async {
-            let mut scan = [[false; W]; H];
-            let mut last_scan = [[false; W]; H];
+        let key_fut = async {
+            let mut scan = &mut [[false; W]; H];
+            let mut last_scan = &mut [[false; W]; H];
             
             loop {
-                self.scanner.scan(&mut scan).await; 
+                self.scanner.scan(scan).await; 
 
                 for y in 0..H {
                     for x in 0..W {
                         if scan[y][x] != last_scan[y][x] {
-                            self.handle_key_event(x, y, scan[y][x]);
+                            self.handle_key_event(x, y, scan[y][x].into());
                         }
                     }
                 }
 
                 let _ = writer.write(self.report.as_slice()).await;
 
-                last_scan = scan;
+                core::mem::swap(&mut scan, &mut last_scan);
             }
         };
     
-        let out_fut = reader.run(false, &mut bufs.request_handler);
-    
-        let _ = join3(usb_fut, in_fut, out_fut).await;
+        join(usb_fut, key_fut).await;
         
-        panic!()
+        unreachable!()
     }
 
-    fn handle_key_event(&mut self, x: usize, y: usize, pressed: bool) {
-        if pressed {
-            self.handle_key_pressed(x, y)
-        } else {
-            self.handle_key_released(x, y)
+    fn handle_key_event(&mut self, x: usize, y: usize, event: Event) {
+        match event {
+            Event::Pressed => self.handle_key_pressed(x, y),
+            Event::Released => self.handle_key_released(x, y),
         }
     }
 
@@ -106,8 +115,8 @@ where
         let action = self.action_map.get(x, y);
 
         assert!(
-            self.replace_action(x, y, action).is_none(), 
-            "Key ({}, {}) pressed twice without being relesed inbetween", x, y
+            self.press(x, y, action).is_none(), 
+            "Key ({}, {}) pressed twice without being released inbetween", x, y
         );
 
         match action {
@@ -128,7 +137,7 @@ where
     }
 
     fn handle_key_released(&mut self, x: usize, y: usize) {
-        if let Some(action) = self.take_action(x, y) {
+        if let Some(action) = self.release(x, y) {
             match action {
                 Action::NoAction => {}
                 Action::Key(code) => {
@@ -147,11 +156,11 @@ where
         }
     }
 
-    fn replace_action(&mut self, x: usize, y: usize, action: Action) -> Option<Action> {
+    fn press(&mut self, x: usize, y: usize, action: Action) -> Option<Action> {
         self.current_action[y][x].replace(action)
     }
 
-    fn take_action(&mut self, x: usize, y: usize) -> Option<Action> {
+    fn release(&mut self, x: usize, y: usize) -> Option<Action> {
         self.current_action[y][x].take()
     }
 }
