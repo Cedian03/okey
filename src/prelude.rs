@@ -3,6 +3,6 @@
 pub use crate::{
     Keyboard,
     action::{Action, Key, Modifier},
-    config::Config,
+    usb::Config,
     scan::Matrix,
 };

@@ -5,46 +5,18 @@ pub mod prelude;
 
 pub mod action;
 pub mod action_map;
-pub mod config;
 pub mod codes;
-pub mod report;
 pub mod scan;
 pub mod usb;
 
 use embassy_futures::join::join3;
-use embassy_usb::{class::hid::{HidReaderWriter, State}, Builder};
+use embassy_usb::{class::hid::HidReaderWriter, Builder};
 use embassy_usb_driver::Driver;
 
 use action::Action;
 use action_map::ActionMap;
-use config::Config;
 use scan::KeyScan;
-use report::Report;
-use usb::handlers::{OkeyDeviceHandler, OkeyRequestHandler};
-
-pub struct Buffers<'a> {
-    pub config_descriptor_buf: [u8; 256],
-    pub bos_descriptor_buf: [u8; 256],
-    pub msos_descriptor_buf: [u8; 256],
-    pub control_buf: [u8; 64],
-    pub request_handler: OkeyRequestHandler,
-    pub device_handler: OkeyDeviceHandler,
-    pub state: State<'a>,
-}
-
-impl<'a> Default for Buffers<'a> {
-    fn default() -> Self {
-        Self {
-            config_descriptor_buf: [0; 256],
-            bos_descriptor_buf: [0; 256],
-            msos_descriptor_buf: [0; 256],
-            control_buf: [0; 64],
-            request_handler: OkeyRequestHandler,
-            device_handler: OkeyDeviceHandler,
-            state: State::new(),
-        }
-    }
-}
+use usb::{Buffers, Config, Report};
 
 pub struct Keyboard<S, const W: usize, const H: usize, const D: usize>
 {
