@@ -120,7 +120,7 @@ define_keys! {
     #[doc = r"Keyboard `;` and `:`."]
     KC_SEMICOLON (KC_SCLN) => Semicolon,
     #[doc = r#"Keyboard `'` and `"`."#]
-    KC_APOSTROPHE (KC_APOS) => Apostrophe,
+    KC_QUOTE (KC_QOUT) => Apostrophe,
     #[doc = r"Keyboard `` ` `` and `~`."]
     KC_GRAVE (KC_GRV) => Grave,
     #[doc = r"Keyboard `,` and `<`."]
@@ -364,7 +364,7 @@ macro_rules! define_modifiers {
 
 define_modifiers! {
     #[doc = r"Keyboard `Left Control`."]
-    KC_LEFT_CONTROL (KC_LCRL) => LeftControl,
+    KC_LEFT_CONTROL (KC_LCTL) => LeftControl,
     #[doc = r"Keyboard `Left Shift`."]
     KC_LEFT_SHIFT (KC_LSFT) => LeftShift,
     #[doc = r"Keyboard `Left ALT`."]
@@ -372,7 +372,7 @@ define_modifiers! {
     #[doc = r"Keyboard `Left GUI`."]
     KC_LEFT_GUI (KC_LGUI, KC_LCMD, KC_LWIN) => LeftGUI,
     #[doc = r"Keyboard `Right Control`."]
-    KC_RIGHT_CONTROL (KC_RCRL) => RightControl,
+    KC_RIGHT_CONTROL (KC_RCTL) => RightControl,
     #[doc = r"Keyboard `Right Shift`."]
     KC_RIGHT_SHIFT (KC_RSFT) => RightShift,
     #[doc = r"Keyboard `Right ALT`."]
