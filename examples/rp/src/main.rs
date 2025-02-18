@@ -21,8 +21,15 @@ bind_interrupts!(struct Irqs {
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
+    let d = Driver::new(p.USB, Irqs);
+
+    let config = Config::default()
+        .pid(0xC3DD)
+        .vid(0x1337);
+
+    let mut hid_state = Default::default(); // TODO: Get rid of this.
     
-    let driver = Driver::new(p.USB, Irqs);
+    let usb = UsbInterface::new(d, config, &mut hid_state);
 
     let matrix = {
         let cols = [
@@ -53,9 +60,7 @@ async fn main(_spawner: Spawner) {
         ]
     };
 
-    let config = Config::new(0xC3DD, 0x0000);
-    
-    let keyboard = Keyboard::new(matrix, map);
+    let board = Keyboard::new(matrix, map);
 
-    keyboard.run(config, driver, &mut Default::default()).await;
+    usb.run(board).await;
 }
