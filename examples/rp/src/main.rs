@@ -43,12 +43,12 @@ async fn main(_spawner: Spawner) {
 
         [
             [
-                [KC_ENT, KC_B    ],
-                [KC_C,   TG(1)   ],
+                [KC_A,    KC_ENTR],
+                [KC_B,    TG(1)  ],
             ],
             [
-                [KC_1,    KC_2   ],
-                [KC_LCRL, _______],
+                [KC_1,    KC_LCTL],
+                [KC_2,    _______],
             ],
         ]
     };
