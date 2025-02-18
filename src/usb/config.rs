@@ -1,6 +1,6 @@
 use embassy_usb::{class::hid::Config as HidConfig, Config as UsbConfig};
 
-use crate::usb::KEYBOARD_DESCRIPTOR;
+use crate::usb::report::KEYBOARD_DESCRIPTOR;
 
 pub struct Config<'a> {
     pub usb_config: UsbConfig<'a>,
