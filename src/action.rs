@@ -1,15 +1,10 @@
-mod key;
-mod modifier;
-
-pub use key::Key;
-pub use modifier::Modifier;
+use crate::usb::Code;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub enum Action {
     #[default]
     NoAction,
-    Key(Key),
-    Modifier(Modifier),
+    Code(Code),
     MomentaryLayer(u8),
     ToggleLayer(u8),
 }

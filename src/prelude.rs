@@ -2,7 +2,7 @@
 
 pub use crate::{
     Keyboard,
-    action::{Action, Key, Modifier},
-    usb::Config,
+    action::Action,
+    usb::{Config, Code},
     scan::Matrix,
 };

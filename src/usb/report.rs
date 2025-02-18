@@ -1,4 +1,13 @@
-use crate::action::{Key, Modifier};
+use super::Code;
+
+/// No event indicated.
+pub const NO_EVENT: u8 = 0x00;
+/// Roll-over error.
+pub const ROLL_OVER_ERROR: u8 = 0x01;
+/// Post fail error.
+pub const POST_FAIL: u8 = 0x02;
+/// Undefined error.
+pub const UNDEFINED_ERROR: u8 = 0x03;
 
 pub const KEYBOARD_DESCRIPTOR: &[u8] = &[
     0x05, 0x01,  // Usage Page (Generic Desktop)
@@ -48,44 +57,46 @@ impl Report {
         self.inner.as_slice()
     }
 
-    pub fn register_code(&mut self, code: Key) -> Result<(), ReportError> {
-        if self.len >= self.inner.codes.len() {
-            return Err(ReportError)
+    pub fn register(&mut self, code: Code) -> Result<(), ReportError> {
+        if let Some(mask) = code.modifier_mask() {
+            self.inner.modifiers |= mask
+        } else {
+            if self.len >= self.inner.codes.len() {
+                return Err(ReportError)
+            }
+    
+            self.inner.codes[self.len] = code as u8;
+            self.len += 1;
         }
-
-        self.inner.codes[self.len] = code;
-        self.len += 1;
 
         Ok(())
     }
 
-    pub fn unregister_code(&mut self, code: Key) -> Result<(), ReportError> {
-        let mut i = 0;
+    pub fn unregister(&mut self, code: Code) -> Result<(), ReportError> {
+        if let Some(mask) = code.modifier_mask() {
+            self.inner.modifiers &= !mask
+        } else {
+            let code = code as u8;
 
-        while i < self.len && self.inner.codes[i] != code {
-            i += 1;
+            let mut i = 0;
+    
+            while i < self.len && self.inner.codes[i] != code {
+                i += 1;
+            }
+    
+            if self.inner.codes[i] != code {
+                return Err(ReportError);
+            }
+    
+            while i < self.len - 1  {
+                self.inner.codes.swap(i, i + 1);
+            }
+    
+            self.len -= 1;
+            self.inner.codes[self.len] = NO_EVENT;
         }
-
-        if self.inner.codes[i] != code {
-            return Err(ReportError);
-        }
-
-        while i < self.len - 1  {
-            self.inner.codes.swap(i, i + 1);
-        }
-
-        self.len -= 1;
-        self.inner.codes[self.len] = Key::NoEvent;
 
         Ok(())
-    }
-
-    pub fn register_modifier(&mut self, modifier: Modifier) {
-        self.inner.modifiers |= modifier.mask();
-    }
-
-    pub fn unregister_modifier(&mut self, modifier: Modifier) {
-        self.inner.modifiers &= !modifier.mask();
     }
 }
 
@@ -94,11 +105,12 @@ impl Report {
 struct Inner {
     modifiers: u8,
     _reserved: u8,
-    codes: [Key; 6]
+    codes: [u8; 6]
 }
 
 impl Inner {
     pub fn as_slice(&self) -> &[u8] {
+        // TODO: Safety comment
         unsafe { 
             core::slice::from_raw_parts(
                 self as *const Self as *const u8, 
@@ -113,7 +125,7 @@ impl Default for Inner {
         Self {
             modifiers: 0,
             _reserved: 0,
-            codes: [Key::NoEvent; 6],
+            codes: [NO_EVENT; 6],
         }
     }
 }

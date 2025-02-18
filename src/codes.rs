@@ -1,6 +1,7 @@
 //! QMK/TMK style keycodes for ease of configuration.
 
-use crate::action::{Action, Key, Modifier};
+use crate::action::Action;
+use crate::usb::Code;
 
 /// Transparent.
 pub const _______: Option<Action> = None;
@@ -11,7 +12,7 @@ macro_rules! define_keys {
     ($(#[doc = $doc:literal] $name:ident $(($($alias:ident),*))? => $key:ident),* $(,)?) => {
         $(
             #[doc = $doc]            
-            pub const $name: Option<Action> = Some(Action::Key(Key::$key));
+            pub const $name: Option<Action> = Some(Action::Code(Code::$key));
 
             $($(
                 #[doc = $doc]
@@ -345,24 +346,6 @@ define_keys! {
     KC_CRSEL (KC_CRSL) => CrSelProps,
     #[doc = r"Keyboard `ExSel`. "]
     KC_EXSEL (KC_EXSL) => ExSel,
-}
-
-macro_rules! define_modifiers {
-    ($(#[doc = $doc:literal] $name:ident $(($($alias:ident),*))? => $modifier:ident),* $(,)?) => {
-        $(
-            #[doc = $doc]            
-            pub const $name: Option<Action> = Some(Action::Modifier(Modifier::$modifier));
-
-            $($(
-                #[doc = $doc]
-                #[doc = concat!(r"Alias for [`", stringify!($name), "`]")]          
-                pub const $alias: Option<Action> = $name;
-            )*)?
-        )*
-    };
-}
-
-define_modifiers! {
     #[doc = r"Keyboard `Left Control`."]
     KC_LEFT_CONTROL (KC_LCTL) => LeftControl,
     #[doc = r"Keyboard `Left Shift`."]

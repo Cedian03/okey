@@ -119,11 +119,8 @@ where
 
         match action {
             Action::NoAction => {}
-            Action::Key(code) => {
-                let _ = self.report.register_code(code);
-            }
-            Action::Modifier(modifier) => {
-                self.report.register_modifier(modifier)
+            Action::Code(code) => {
+                let _ = self.report.register(code);
             }
             Action::MomentaryLayer(layer) => {
                 self.action_map.set_layer(layer)
@@ -138,11 +135,8 @@ where
         if let Some(action) = self.release(x, y) {
             match action {
                 Action::NoAction => {}
-                Action::Key(code) => {
-                    let _ = self.report.unregister_code(code);
-                }
-                Action::Modifier(modifier) => {
-                    self.report.unregister_modifier(modifier);
+                Action::Code(code) => {
+                    let _ = self.report.unregister(code);
                 }
                 Action::MomentaryLayer(layer) => {
                     self.action_map.unset_layer(layer);
