@@ -366,7 +366,7 @@ define_keys! {
 
 /// Activate `layer` while key is being held.
 #[allow(non_snake_case)]
-pub const fn MT(layer: u8) -> Option<Action> {
+pub const fn MO(layer: u8) -> Option<Action> {
     Some(Action::MomentaryLayer(layer))
 }
 
