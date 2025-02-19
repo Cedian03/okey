@@ -2,11 +2,12 @@ mod code;
 mod config;
 mod handlers;
 mod report;
+mod state;
 
 use embassy_futures::join::join;
 
 use embassy_usb::{
-    class::hid::{HidReader, HidReaderWriter, HidWriter, State}, 
+    class::hid::{HidReader, HidReaderWriter, HidWriter}, 
     driver::Driver, 
     Builder, 
     UsbDevice
@@ -16,23 +17,9 @@ pub use code::Code;
 pub use config::Config;
 pub use handlers::{OkeyDeviceHandler, OkeyRequestHandler};
 pub use report::{Report, ReportError};
+pub use state::State;
 
 use crate::{scan::KeyScan, Keyboard};
-
-// TODO: Make this is actually safe or find another way.
-static mut BUFFERS: Option<Buffers> = Some(unsafe {
-    Buffers::new(
-        &mut CONFIG_DESCRIPTOR_BUF,
-        &mut BOS_DESCRIPTOR_BUF,
-        &mut MSOS_DESCRIPTOR_BUF,
-        &mut CONTROL_BUF,
-    )
-});
-
-static mut CONFIG_DESCRIPTOR_BUF: [u8; 256] = [0; 256];
-static mut BOS_DESCRIPTOR_BUF: [u8; 256] = [0; 256];
-static mut MSOS_DESCRIPTOR_BUF: [u8; 256] = [0; 256];
-static mut CONTROL_BUF: [u8; 64] = [0; 64];
 
 pub struct UsbInterface<'a, T: Driver<'a>> {
     device: UsbDevice<'a, T>,
@@ -41,27 +28,21 @@ pub struct UsbInterface<'a, T: Driver<'a>> {
 }
 
 impl<'a, T: Driver<'a>> UsbInterface<'a, T> {
-    pub fn new(
-        driver: T, 
-        config: Config<'a>, 
-        hid_state: &'a mut State<'a>,  // TODO: Get rid of this.
-    ) -> Self {
+    pub fn new(driver: T, config: Config<'a>, state: &'a mut State<'a>) -> Self {
         let (usb_config, hid_config) = config.split();
-
-        let buffers = Buffers::take();
 
         let mut builder = Builder::new(
             driver, 
             usb_config, 
-            buffers.config_descriptor_buf,
-            buffers.bos_descriptor_buf,
-            buffers.msos_descriptor_buf,
-            buffers.control_buf,
+            &mut state.config_descriptor_buf,
+            &mut state.bos_descriptor_buf,
+            &mut state.msos_descriptor_buf,
+            &mut state.control_buf,
         );
 
         let (reader, writer) = HidReaderWriter::new(
             &mut builder, 
-            hid_state, 
+            &mut state.hid_state, 
             hid_config
         ).split();
 
@@ -102,34 +83,4 @@ impl<'a, T: Driver<'a>> UsbInterface<'a, T> {
 
         join(device.run(), key_fut).await;
     } 
-}
-
-struct Buffers<'a> {
-    config_descriptor_buf: &'a mut [u8],
-    bos_descriptor_buf: &'a mut [u8],
-    msos_descriptor_buf: &'a mut [u8],
-    control_buf: &'a mut [u8],
-}
-
-impl<'a> Buffers<'a> {
-    const fn new(
-        config_descriptor_buf: &'a mut [u8],
-        bos_descriptor_buf: &'a mut [u8],
-        msos_descriptor_buf: &'a mut [u8],
-        control_buf: &'a mut [u8],
-    ) -> Self {
-        Self {
-            config_descriptor_buf,
-            bos_descriptor_buf,
-            msos_descriptor_buf,
-            control_buf,
-        }
-    }
-}
-
-impl Buffers<'static> {
-    const fn take() -> Self {
-        // TODO: Make this is actually safe or find another way.
-        unsafe { BUFFERS.take().unwrap() }
-    }
 }
