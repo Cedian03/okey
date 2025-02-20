@@ -23,7 +23,7 @@ use crate::{scan::KeyScan, Keyboard};
 
 pub struct UsbInterface<'a, T: Driver<'a>> {
     device: UsbDevice<'a, T>,
-    reader: HidReader<'a, T, 1>,
+    _reader: HidReader<'a, T, 1>,
     writer: HidWriter<'a, T, 8>,
 }
 
@@ -40,7 +40,7 @@ impl<'a, T: Driver<'a>> UsbInterface<'a, T> {
             &mut state.control_buf,
         );
 
-        let (reader, writer) = HidReaderWriter::new(
+        let (_reader, writer) = HidReaderWriter::new(
             &mut builder, 
             &mut state.hid_state, 
             hid_config
@@ -50,13 +50,13 @@ impl<'a, T: Driver<'a>> UsbInterface<'a, T> {
 
         Self {
             device,
-            reader,
+            _reader,
             writer,
         }
     }
 
     pub async fn run<S: KeyScan<W, H>, const W: usize, const H: usize, const D: usize>(self, mut board: Keyboard<S, W, H, D>) {
-        let Self { mut device, reader: _, writer: mut hid_writer } = self;
+        let Self { mut device, _reader, writer: mut hid_writer } = self;
 
         let key_fut = async {
             let mut scan = &mut [[false; W]; H];

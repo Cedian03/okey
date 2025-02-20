@@ -79,7 +79,7 @@ where
     }
 }
 
-trait DiodDirection {
+pub trait DiodDirection: private::Sealed {
     type Cols;
     type Rows;
 }
@@ -110,4 +110,13 @@ where
 {
     type Cols = C;    
     type Rows = R;    
+}
+
+mod private {
+    use super::*;
+
+    pub trait Sealed {}
+
+    impl<C, R> Sealed for COL2ROW<C, R> {}
+    impl<C, R> Sealed for ROW2COL<C, R> {}
 }

@@ -2,12 +2,12 @@ use super::Code;
 
 /// No event indicated.
 pub const NO_EVENT: u8 = 0x00;
-/// Roll-over error.
-pub const ROLL_OVER_ERROR: u8 = 0x01;
-/// Post fail error.
-pub const POST_FAIL: u8 = 0x02;
-/// Undefined error.
-pub const UNDEFINED_ERROR: u8 = 0x03;
+// /// Roll-over error.
+// pub const ROLL_OVER_ERROR: u8 = 0x01;
+// /// Post fail error.
+// pub const POST_FAIL: u8 = 0x02;
+// /// Undefined error.
+// pub const UNDEFINED_ERROR: u8 = 0x03;
 
 pub const KEYBOARD_DESCRIPTOR: &[u8] = &[
     0x05, 0x01,  // Usage Page (Generic Desktop)
