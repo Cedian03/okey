@@ -47,14 +47,16 @@ where
     R: InputPin<Error = Infallible>, 
 {
     async fn scan(&mut self, buf: &mut [[bool; W]; H]) {
-        for (col_pin, row) in self.cols.iter_mut().zip(buf.iter_mut()) {
+        for x in 0..W {
+            let col_pin = &mut self.cols[x];
             col_pin.set_high().unwrap();
             Timer::after_micros(30).await;
 
-            for (row_pin, dst) in self.rows.iter_mut().zip(row.iter_mut()) {
-                *dst = row_pin.is_high().unwrap();
+            for y in 0..H {
+                let row_pin =  &mut self.rows[y];
+                buf[y][x] = row_pin.is_high().unwrap();
             }
-            
+
             col_pin.set_low().unwrap();
             Timer::after_micros(30).await;
         }
@@ -67,14 +69,16 @@ where
     R: OutputPin<Error = Infallible>,
 {
     async fn scan(&mut self, buf: &mut [[bool; W]; H]) {
-        for (row_pin, row) in self.rows.iter_mut().zip(buf.iter_mut()) {
+        for y in 0..H {
+            let row_pin = &mut self.rows[y];
             row_pin.set_high().unwrap();
             Timer::after_micros(30).await;
 
-            for (col_pin, dst) in self.cols.iter_mut().zip(row.iter_mut()) {
-                *dst = col_pin.is_high().unwrap();
+            for x in 0..W {
+                let col_pin =  &mut self.cols[x];
+                buf[y][x] = col_pin.is_high().unwrap();
             }
-            
+
             row_pin.set_low().unwrap();
             Timer::after_micros(30).await;
         }
