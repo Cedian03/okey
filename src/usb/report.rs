@@ -9,7 +9,7 @@ pub const NO_EVENT: u8 = 0x00;
 // /// Undefined error.
 // pub const UNDEFINED_ERROR: u8 = 0x03;
 
-pub const KEYBOARD_DESCRIPTOR: &[u8] = &[
+pub const REPORT_DESCRIPTOR: &[u8] = &[
     0x05, 0x01,  // Usage Page (Generic Desktop)
     0x09, 0x06,  // Usage (Keyboard)
     0xA1, 0x01,  // Collection (Application)
@@ -53,11 +53,18 @@ pub struct Report {
 }
 
 impl Report {
-    pub fn as_slice(&self) -> &[u8] {
+    pub const fn new() -> Self {
+        Self {
+            inner: Inner::new(),
+            len: 0,
+        }
+    }
+
+    pub const fn as_slice(&self) -> &[u8] {
         self.inner.as_slice()
     }
 
-    pub fn register(&mut self, code: Code) -> Result<(), ReportError> {
+    pub fn add(&mut self, code: Code) -> Result<(), ReportError> {
         if let Some(mask) = code.modifier_mask() {
             self.inner.modifiers |= mask
         } else {
@@ -72,7 +79,7 @@ impl Report {
         Ok(())
     }
 
-    pub fn unregister(&mut self, code: Code) -> Result<(), ReportError> {
+    pub fn remove(&mut self, code: Code) -> Result<(), ReportError> {
         if let Some(mask) = code.modifier_mask() {
             self.inner.modifiers &= !mask
         } else {
@@ -109,7 +116,15 @@ struct Inner {
 }
 
 impl Inner {
-    pub fn as_slice(&self) -> &[u8] {
+    const fn new() -> Self {
+        Self {
+            modifiers: 0,
+            _reserved: 0,
+            codes: [NO_EVENT; 6],
+        }
+    }
+
+    const fn as_slice(&self) -> &[u8] {
         // TODO: Safety comment
         unsafe { 
             core::slice::from_raw_parts(
@@ -122,10 +137,6 @@ impl Inner {
 
 impl Default for Inner {
     fn default() -> Self {
-        Self {
-            modifiers: 0,
-            _reserved: 0,
-            codes: [NO_EVENT; 6],
-        }
+        Self::new()
     }
 }

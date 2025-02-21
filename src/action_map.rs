@@ -6,8 +6,6 @@ pub struct ActionMap<const W: usize, const H: usize, const D: usize> {
 }
 
 impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H, D> {
-    const _A: () = assert!(D <= 32);
-
     pub fn new(map: [[[Option<Action>; W]; H]; D]) -> Self {
         Self { layers: map, active_layers: 1 }
     }
@@ -15,7 +13,8 @@ impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H, D> {
     pub fn get(&self, x: usize, y: usize) -> Action {
         (0..D)
             .rev()
-            .find_map(|z| self.is_active(z as u8).then(|| self.index(x, y, z)).flatten())
+            .filter(|z| self.is_active(*z as u8))
+            .find_map(|z| self.index(x, y, z))
             .unwrap_or_default()
     }
 
@@ -23,7 +22,7 @@ impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H, D> {
         self.layers[z][y][x]
     }
 
-    fn is_active(&self, layer: u8) -> bool {
+    pub fn is_active(&self, layer: u8) -> bool {
         self.active_layers & 1 << layer != 0
     }
 

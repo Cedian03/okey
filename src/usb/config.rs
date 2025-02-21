@@ -1,6 +1,6 @@
 use embassy_usb::{class::hid::Config as HidConfig, Config as UsbConfig};
 
-use super::report::KEYBOARD_DESCRIPTOR;
+use super::report::REPORT_DESCRIPTOR;
 
 pub struct Config<'a> {
     /// Vendor ID. Default: 0x1209.
@@ -36,7 +36,7 @@ impl<'a> Config<'a> {
         usb.serial_number = self.serial_number;
 
         let hid = HidConfig {
-            report_descriptor: KEYBOARD_DESCRIPTOR,
+            report_descriptor: REPORT_DESCRIPTOR,
             request_handler: None,
             poll_ms: self.poll_interval,
             max_packet_size: usb.max_packet_size_0 as u16,

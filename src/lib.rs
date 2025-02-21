@@ -11,7 +11,7 @@ pub mod usb;
 
 use action::Action;
 use action_map::ActionMap;
-use scan::KeyScan;
+use scan::Scan;
 use usb::Report;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -20,9 +20,9 @@ pub enum Event {
     Released,
 }
 
-impl From<bool> for Event {
-    fn from(value: bool) -> Self {
-        if value {
+impl Event {
+    pub fn new(pressed: bool) -> Self {
+        if pressed {
             Self::Pressed
         } else {
             Self::Released
@@ -38,7 +38,7 @@ pub struct Keyboard<S, const W: usize, const H: usize, const D: usize> {
 
 impl<S, const W: usize, const H: usize, const D: usize> Keyboard<S, W, H, D>
 where
-    S: KeyScan<W, H>,
+    S: Scan<W, H>,
 {
     pub fn new(scanner: S, map: [[[Option<Action>; W]; H]; D]) -> Self {
         Self {
@@ -67,7 +67,7 @@ where
         match action {
             Action::NoAction => {}
             Action::Code(code) => {
-                let _ = report.register(code);
+                let _ = report.add(code);
             }
             Action::MomentaryLayer(layer) => {
                 self.action_map.set_layer(layer)
@@ -84,7 +84,7 @@ where
             match action {
                 Action::NoAction => {}
                 Action::Code(code) => {
-                    let _ = report.unregister(code);
+                    let _ = report.remove(code);
                 }
                 Action::MomentaryLayer(layer) => {
                     self.action_map.unset_layer(layer);
