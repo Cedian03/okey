@@ -1,12 +1,20 @@
 use embassy_usb::{class::hid::Config as HidConfig, Config as UsbConfig};
 
-use crate::usb::report::KEYBOARD_DESCRIPTOR;
+use super::report::KEYBOARD_DESCRIPTOR;
 
 pub struct Config<'a> {
+    /// Vendor ID. Default: 0x1209.
     vid: u16,
+    /// Product ID. Default: 0x0001.
     pid: u16,
+    /// Manufacturer name. Default: None.
     manufacturer: Option<&'a str>,
+    /// Product name. Default: None.
     product: Option<&'a str>,
+    /// Serial number. Default: None.
+    serial_number: Option<&'a str>,
+    /// Polling interval in ms. Default: 10.
+    poll_interval: u8,
 }
 
 impl<'a> Config<'a> {
@@ -16,18 +24,21 @@ impl<'a> Config<'a> {
             pid: 0x0001,
             manufacturer: None,
             product: None,
+            serial_number: None,
+            poll_interval: 10,
         }
     }
 
-    pub const fn split(self) -> (UsbConfig<'a>, HidConfig<'a>) {
+    pub(super) const fn split(self) -> (UsbConfig<'a>, HidConfig<'a>) {
         let mut usb = UsbConfig::new(self.vid, self.pid);
         usb.manufacturer = self.manufacturer;
         usb.product = self.product;
+        usb.serial_number = self.serial_number;
 
         let hid = HidConfig {
             report_descriptor: KEYBOARD_DESCRIPTOR,
             request_handler: None,
-            poll_ms: 10,
+            poll_ms: self.poll_interval,
             max_packet_size: usb.max_packet_size_0 as u16,
         };
 
@@ -51,6 +62,22 @@ impl<'a> Config<'a> {
 
     pub const fn product(mut self, product: &'static str) -> Self {
         self.product = Some(product);
+        self
+    }
+
+    pub const fn serial_number(mut self, serial_number: &'static str) -> Self {
+        self.serial_number = Some(serial_number);
+        self
+    }
+
+    pub const fn poll_interval(mut self, ms: u8) -> Self {
+        self.poll_interval = ms;
+        self
+    }
+
+    pub const fn poll_rate(mut self, hz: u16) -> Self {
+        assert!(hz >= 4 && hz <= 1000);
+        self.poll_interval = (1000 / hz) as u8;
         self
     }
 }
