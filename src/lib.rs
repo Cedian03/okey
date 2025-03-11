@@ -38,10 +38,10 @@ impl<S, const W: usize, const H: usize, const D: usize> Keyboard<S, W, H, D>
 where
     S: Scan<W, H>,
 {
-    pub fn new(scanner: S, map: [[[Option<Action>; W]; H]; D]) -> Self {
+    pub fn new(scanner: S, map: impl Into<ActionMap<W, H, D>>) -> Self {
         Self {
             scanner,
-            action_map: ActionMap::new(map),
+            action_map: map.into(),
             current_action: [[None; W]; H],
         }
     }
