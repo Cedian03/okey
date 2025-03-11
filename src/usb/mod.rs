@@ -19,7 +19,7 @@ pub use handlers::{OkeyDeviceHandler, OkeyRequestHandler};
 pub use report::{Report, ReportError};
 pub use state::State;
 
-use crate::{scan::Scan, Event, Keyboard};
+use crate::{action::Action, scan::Scan, Event, events, Keyboard};
 
 pub struct UsbInterface<'a, T: Driver<'a>> {
     device: UsbDevice<'a, T>,
@@ -60,24 +60,22 @@ impl<'a, T: Driver<'a>> UsbInterface<'a, T> {
 
         let key_fut = async {
             let mut scan = &mut [[false; W]; H];
-            let mut last_scan = &mut [[false; W]; H];
+            let mut prev_scan = &mut [[false; W]; H];
             
             let mut report = Report::default();
 
             loop {
                 board.scanner.scan(scan).await; 
     
-                for y in 0..H {
-                    for x in 0..W {
-                        if scan[y][x] != last_scan[y][x] {
-                            board.handle_key_event(x, y, Event::new(scan[y][x]), &mut report);
-                        }
-                    }
+                for ((x, y), event) in events(scan, prev_scan) {
+                    if let Action::Code(code) = board.process_event(x, y, Event::new(scan[y][x])) {
+                        let _ = report.handle(event, code);
+                    } 
                 }
-    
+
                 let _ = writer.write(report.as_slice()).await;
     
-                core::mem::swap(&mut scan, &mut last_scan);
+                core::mem::swap(&mut scan, &mut prev_scan);
             }
         };
 

@@ -8,11 +8,9 @@ pub mod codes;
 pub mod scan;
 pub mod usb;
 
-
 use action::Action;
 use action_map::ActionMap;
 use scan::Scan;
-use usb::Report;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Event {
@@ -48,59 +46,52 @@ where
         }
     }
 
-    fn handle_key_event(&mut self, x: usize, y: usize, event: Event, report: &mut Report) {
+    fn process_event(&mut self, x: usize, y: usize, event: Event) -> Action {
         match event {
-            Event::Pressed => self.handle_key_pressed(x, y, report),
-            Event::Released => self.handle_key_released(x, y, report),
+            Event::Pressed => self.process_pressed(x, y),
+            Event::Released => self.process_released(x, y),
         }
     }
 
-    // TODO: Move usb specific report usage.
-    fn handle_key_pressed(&mut self, x: usize, y: usize, report: &mut Report) {
+    fn process_pressed(&mut self, x: usize, y: usize) -> Action {
         let action = self.action_map.get(x, y);
 
-        assert!(
-            self.press(x, y, action).is_none(), 
-            "Key ({}, {}) pressed twice without being released inbetween", x, y
-        );
+        assert!(self.set_action(x, y, action).is_none());
 
         match action {
-            Action::NoAction => {}
-            Action::Code(code) => {
-                let _ = report.add(code);
-            }
-            Action::MomentaryLayer(layer) => {
-                self.action_map.set_layer(layer)
-            }
-            Action::ToggleLayer(layer) => {
-                self.action_map.toggle_layer(layer)
-            }
+            Action::MomentaryLayer(layer) => self.action_map.set_layer(layer),
+            Action::ToggleLayer(layer) => self.action_map.toggle_layer(layer),
+            _ => {}
         }
+
+        action
     }
 
-    // TODO: Move usb specific report usage.
-    fn handle_key_released(&mut self, x: usize, y: usize, report: &mut Report) {
-        if let Some(action) = self.release(x, y) {
-            match action {
-                Action::NoAction => {}
-                Action::Code(code) => {
-                    let _ = report.remove(code);
-                }
-                Action::MomentaryLayer(layer) => {
-                    self.action_map.unset_layer(layer);
-                }
-                Action::ToggleLayer(_) => {}
-            }
-        } else {
-            panic!("Key ({}, {}) released without being pressed", x, y)
+    fn process_released(&mut self, x: usize, y: usize) -> Action {
+        let action = self.unset_action(x, y).unwrap();
+
+        match action {
+            Action::MomentaryLayer(layer) => self.action_map.unset_layer(layer),
+            _ => {}
         }
+
+        action
     }
 
-    fn press(&mut self, x: usize, y: usize, action: Action) -> Option<Action> {
+    fn set_action(&mut self, x: usize, y: usize, action: Action) -> Option<Action> {
         self.current_action[y][x].replace(action)
     }
 
-    fn release(&mut self, x: usize, y: usize) -> Option<Action> {
+    fn unset_action(&mut self, x: usize, y: usize) -> Option<Action> {
         self.current_action[y][x].take()
     }
+}
+
+pub fn events<const W: usize, const H: usize>(scan: &[[bool; W]; H], prev_scan: &[[bool; W]; H]) -> impl Iterator<Item = ((usize, usize), Event)> {
+    (0..H).flat_map(move |y| {
+        (0..W).filter_map(move |x| {
+            (scan[y][x] != prev_scan[y][x])
+                .then(|| ((x, y), Event::new(scan[y][x])))
+        })
+    })
 }
