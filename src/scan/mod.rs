@@ -1,3 +1,5 @@
+pub mod debounce;
+
 mod direct;
 mod matrix;
 

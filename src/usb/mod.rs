@@ -5,7 +5,7 @@ mod report;
 mod state;
 
 use embassy_futures::join::join;
-
+use embassy_time::{Duration, Ticker};
 use embassy_usb::{
     class::hid::{HidReader, HidReaderWriter, HidWriter}, 
     driver::Driver, 
@@ -13,13 +13,16 @@ use embassy_usb::{
     UsbDevice
 };
 
+use crate::{action::Action, scan::Scan, Event, events, Keyboard};
+
 pub use code::Code;
 pub use config::Config;
 pub use handlers::{OkeyDeviceHandler, OkeyRequestHandler};
 pub use report::{Report, ReportError};
 pub use state::State;
 
-use crate::{action::Action, scan::Scan, Event, events, Keyboard};
+
+pub const SCAN_INTERVAL: u64 = 5; // ms
 
 pub struct UsbInterface<'a, T: Driver<'a>> {
     device: UsbDevice<'a, T>,
@@ -61,10 +64,14 @@ impl<'a, T: Driver<'a>> UsbInterface<'a, T> {
         let key_fut = async {
             let mut scan = &mut [[false; W]; H];
             let mut prev_scan = &mut [[false; W]; H];
-            
+
             let mut report = Report::default();
 
+            let mut ticker = Ticker::every(Duration::from_millis(SCAN_INTERVAL));
+
             loop {
+                ticker.next().await;
+
                 board.scanner.scan(scan).await; 
     
                 for ((x, y), event) in events(scan, prev_scan) {

@@ -43,7 +43,7 @@ async fn main(_spawner: Spawner) {
             Input::new(p.PIN_11, Pull::Down),
         ];
 
-        Matrix::col2row(cols, rows)
+        Simple::new(Matrix::col2row(cols, rows))
     };
 
     let map = {
@@ -52,7 +52,7 @@ async fn main(_spawner: Spawner) {
         [
             [
                 [KC_A,    KC_ENTR],
-                [KC_B,    MO(1)  ],
+                [KC_B,    TG(1)  ],
             ],
             [
                 [KC_1,    KC_LCTL],
