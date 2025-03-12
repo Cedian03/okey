@@ -13,14 +13,18 @@ use embassy_usb::{
     UsbDevice
 };
 
-use crate::{action::Action, scan::Scan, Event, events, Keyboard};
+use crate::{
+    action::Action, 
+    event::{Event, events}, 
+    scan::Scan, 
+    Keyboard
+};
 
 pub use code::Code;
 pub use config::Config;
 pub use handlers::{OkeyDeviceHandler, OkeyRequestHandler};
 pub use report::{Report, ReportError};
 pub use state::State;
-
 
 pub const SCAN_INTERVAL: u64 = 5; // ms
 

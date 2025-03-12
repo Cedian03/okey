@@ -5,28 +5,14 @@ pub mod prelude;
 pub mod action;
 pub mod action_map;
 pub mod codes;
+pub mod event;
 pub mod scan;
 pub mod usb;
 
 use action::Action;
 use action_map::ActionMap;
+use event::Event;
 use scan::Scan;
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Event {
-    Pressed,
-    Released,
-}
-
-impl Event {
-    pub fn new(pressed: bool) -> Self {
-        if pressed {
-            Self::Pressed
-        } else {
-            Self::Released
-        }
-    }
-}
 
 pub struct Keyboard<S, const W: usize, const H: usize, const D: usize> {
     scanner: S,
@@ -85,13 +71,4 @@ where
     fn unset_action(&mut self, x: usize, y: usize) -> Option<Action> {
         self.current_action[y][x].take()
     }
-}
-
-pub fn events<const W: usize, const H: usize>(scan: &[[bool; W]; H], prev_scan: &[[bool; W]; H]) -> impl Iterator<Item = ((usize, usize), Event)> {
-    (0..H).flat_map(move |y| {
-        (0..W).filter_map(move |x| {
-            (scan[y][x] != prev_scan[y][x])
-                .then(|| ((x, y), Event::new(scan[y][x])))
-        })
-    })
 }
