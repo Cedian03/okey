@@ -1062,17 +1062,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rp-pac"
-version = "7.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8af65855c40b2c35079514c5489abffc0429347fef25d8467ff98ad84b4322d3"
-dependencies = [
- "cortex-m",
- "cortex-m-rt",
-]
-
-[[package]]
-name = "rp2040"
+name = "rp"
 version = "0.1.0"
 dependencies = [
  "cortex-m",
@@ -1081,6 +1071,16 @@ dependencies = [
  "embassy-rp",
  "okey",
  "panic-probe",
+]
+
+[[package]]
+name = "rp-pac"
+version = "7.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8af65855c40b2c35079514c5489abffc0429347fef25d8467ff98ad84b4322d3"
+dependencies = [
+ "cortex-m",
+ "cortex-m-rt",
 ]
 
 [[package]]

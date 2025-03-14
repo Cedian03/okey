@@ -10,13 +10,3 @@ embassy-time = "0.4.0"
 embassy-usb = "0.4.0"
 
 embedded-hal = "1.0.0"
-
-[profile.release]
-debug = 2
-lto = true
-opt-level = 'z'
-
-[profile.dev]
-debug = 2
-lto = true
-opt-level = "z"
