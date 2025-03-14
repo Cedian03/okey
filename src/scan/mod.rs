@@ -8,4 +8,8 @@ pub use matrix::Matrix;
 
 pub trait Scan<const W: usize, const H: usize> {
     fn scan(&mut self, buf: &mut [[bool; W]; H]) -> impl core::future::Future<Output = ()>;
+
+    fn debounce(self) -> impl Scan<W, H> where Self: Sized {
+        debounce::debounce(self)
+    }
 }

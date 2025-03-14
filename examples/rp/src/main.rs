@@ -2,12 +2,11 @@
 #![no_main]
 
 use embassy_executor::Spawner;
-
 use embassy_rp::{
-    bind_interrupts, 
     gpio::{Input, Level, Output, Pull}, 
     peripherals::USB, 
     usb::{Driver, InterruptHandler},
+    bind_interrupts, 
 };
 
 use okey::prelude::*;
@@ -23,13 +22,8 @@ async fn main(_spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
     
     let driver = Driver::new(p.USB, Irqs);
-
-    let config = Config::default()
-        .pid(0xC3DD)
-        .vid(0x1337);
-
+    let config = Config::default();
     let mut state = State::default();
-
     let usb = UsbInterface::new(driver, config, &mut state);
 
     let matrix = {
@@ -43,7 +37,8 @@ async fn main(_spawner: Spawner) {
             Input::new(p.PIN_11, Pull::Down),
         ];
 
-        Simple::new(Matrix::col2row(cols, rows))
+        Matrix::col2row(cols, rows)
+            .debounce()
     };
 
     let map = {
