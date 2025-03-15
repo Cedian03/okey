@@ -26,7 +26,7 @@ async fn main(_spawner: Spawner) {
     let mut state = State::default();
     let usb = UsbInterface::new(driver, config, &mut state);
 
-    let matrix = {
+    let scanner = {
         let cols = [
             Output::new(p.PIN_0, Level::Low),
             Output::new(p.PIN_1, Level::Low),
@@ -37,8 +37,7 @@ async fn main(_spawner: Spawner) {
             Input::new(p.PIN_11, Pull::Down),
         ];
 
-        Matrix::col2row(cols, rows)
-            .debounce()
+        Col2Row::debounced(cols, rows)
     };
 
     let map = {
@@ -56,7 +55,7 @@ async fn main(_spawner: Spawner) {
         ]
     };
 
-    let board = Keyboard::new(matrix, map);
+    let board = Keyboard::new(scanner, map);
 
     usb.run(board).await;
 }

@@ -3,6 +3,6 @@
 pub use crate::{
     action::Action,
     usb::{Code, Config, State, UsbInterface},
-    scan::{Matrix, Scan},
+    scan::{Col2Row, Row2Col, Scan},
     Keyboard,
 };
