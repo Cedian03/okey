@@ -4,364 +4,404 @@ use crate::action::Action;
 use crate::usb::Code;
 
 /// Transparent.
-pub const _______: Option<Action> = None;
+/// 
+/// You might want to use one of the aliases: [`KC_TRNS`], [`_______`].
+pub const KC_TRANSPARENT: Option<Action> = None;
+/// Transparent. 
+/// 
+/// Alias for [`KC_TRANSPARENT`].
+pub const KC_TRNS: Option<Action> = KC_TRANSPARENT;
+/// Transparent. 
+/// 
+/// Alias for [`KC_TRANSPARENT`].
+pub const _______: Option<Action> = KC_TRANSPARENT;
+
+/// No action.
+/// 
+/// You might want to use the alias: [`XXXXXXX`].
+pub const KC_NO: Option<Action> = Some(Action::NoAction);
 /// No action. 
-pub const XXXXXXX: Option<Action> = Some(Action::NoAction);
+/// 
+/// Alias for [`KC_NO`].
+pub const XXXXXXX: Option<Action> = KC_NO;
 
 macro_rules! define_keys {
-    ($(#[doc = $doc:literal] $name:ident $(($($alias:ident),*))? => $key:ident),* $(,)?) => {
+    ($(#[doc = $doc:literal] $ident:ident $(($($alias:ident),+))? => $code:expr),* $(,)?) => {
         $(
-            #[doc = $doc]            
-            pub const $name: Option<Action> = Some(Action::Code(Code::$key));
+            #[doc = $doc]
+            $(
+                #[doc = ""]
+                #[doc = format_alias_intro!($($alias),+)]
+            )?
+            pub const $ident: Option<Action> = Some(Action::Code($code));
 
             $($(
                 #[doc = $doc]
-                #[doc = concat!(r"Alias for [`", stringify!($name), "`]")]          
-                pub const $alias: Option<Action> = $name;
+                #[doc = ""]
+                #[doc = concat!("Alias for [`", stringify!($ident), "`].")]
+                pub const $alias: Option<Action> = $ident;
             )*)?
         )*
     };
 }
 
+macro_rules! format_alias_intro {
+    ($alias:ident) => {
+        concat!("You might want to use the alias: [`", stringify!($alias), "`].")
+    };
+    ($($alias:ident),+) => {
+        concat!("You might want to use one of the aliases: ", format_alias_list!($($alias),+), ".")
+    }
+}
+
+macro_rules! format_alias_list {
+    ($alias:ident) => {
+        concat!("[`", stringify!($alias), "`]")
+    };
+    ($first:ident, $($rest:ident),+) => {
+        concat!("[`", stringify!($first), "`]", $(", [`", stringify!($rest), "`]"),+)
+    };
+}
+
 define_keys! {
-    #[doc = r"Keyboard `a` and `A`."]
-    KC_A => KeyboardA,
-    #[doc = r"Keyboard `b` and `B`."]
-    KC_B => KeyboardB,
-    #[doc = r"Keyboard `c` and `C`."]
-    KC_C => KeyboardC,
-    #[doc = r"Keyboard `d` and `D`."]
-    KC_D => KeyboardD,
-    #[doc = r"Keyboard `e` and `E`."]
-    KC_E => KeyboardE,
-    #[doc = r"Keyboard `f` and `F`."]
-    KC_F => KeyboardF,
-    #[doc = r"Keyboard `g` and `G`."]
-    KC_G => KeyboardG,
-    #[doc = r"Keyboard `h` and `H`."]
-    KC_H => KeyboardH,
-    #[doc = r"Keyboard `i` and `I`."]
-    KC_I => KeyboardI,
-    #[doc = r"Keyboard `j` and `J`."]
-    KC_J => KeyboardJ,
-    #[doc = r"Keyboard `k` and `K`."]
-    KC_K => KeyboardK,
-    #[doc = r"Keyboard `l` and `L`."]
-    KC_L => KeyboardL,
-    #[doc = r"Keyboard `m` and `M`."]
-    KC_M => KeyboardM,
-    #[doc = r"Keyboard `n` and `N`."]
-    KC_N => KeyboardN,
-    #[doc = r"Keyboard `o` and `O`."]
-    KC_O => KeyboardO,
-    #[doc = r"Keyboard `p` and `P`."]
-    KC_P => KeyboardP,
-    #[doc = r"Keyboard `q` and `Q`."]
-    KC_Q => KeyboardQ,
-    #[doc = r"Keyboard `r` and `R`."]
-    KC_R => KeyboardR,
-    #[doc = r"Keyboard `s` and `S`."]
-    KC_S => KeyboardS,
-    #[doc = r"Keyboard `t` and `T`."]
-    KC_T => KeyboardT,
-    #[doc = r"Keyboard `u` and `U`."]
-    KC_U => KeyboardU,
-    #[doc = r"Keyboard `v` and `V`."]
-    KC_V => KeyboardV,
-    #[doc = r"Keyboard `w` and `W`."]
-    KC_W => KeyboardW,
-    #[doc = r"Keyboard `x` and `X`."]
-    KC_X => KeyboardX,
-    #[doc = r"Keyboard `y` and `Y`."]
-    KC_Y => KeyboardY,
-    #[doc = r"Keyboard `z` and `Z`."]
-    KC_Z => KeyboardZ,
-    #[doc = r"Keyboard `1` and `!`."]
-    KC_1 => Keyboard1,
-    #[doc = r"Keyboard `2` and `@`."]
-    KC_2 => Keyboard2,
-    #[doc = r"Keyboard `3` and `#`."]
-    KC_3 => Keyboard3,
-    #[doc = r"Keyboard `4` and `$`."]
-    KC_4 => Keyboard4,
-    #[doc = r"Keyboard `5` and `%`."]
-    KC_5 => Keyboard5,
-    #[doc = r"Keyboard `6` and `^`."]
-    KC_6 => Keyboard6,
-    #[doc = r"Keyboard `7` and `&`."]
-    KC_7 => Keyboard7,
-    #[doc = r"Keyboard `8` and `*`."]
-    KC_8 => Keyboard8,
-    #[doc = r"Keyboard `9` and `(`."]
-    KC_9 => Keyboard9,
-    #[doc = r"Keyboard `0` and `)`."]
-    KC_0 => Keyboard0,
-    #[doc = r"Keyboard `Enter`."]
-    KC_ENTER (KC_ENTR, KC_ENT) => Enter,
-    #[doc = r"Keyboard `Escape`."]
-    KC_ESCAPE (KC_ESC) => Escape,
-    #[doc = r"Keyboard `Backspace`."]
-    KC_BACKSPACE (KC_BSPC) => Backspace,
-    #[doc = r"Keyboard `Tab`."]
-    KC_TAB => Tab,
-    #[doc = r"Keyboard `Space`."]
-    KC_SPACE (KC_SPC) => Space,
-    #[doc = r"Keyboard `-` and `_`."]
-    KC_MINUS (KC_MINS) => Minus,
-    #[doc = r"Keyboard `=` and `+`."]
-    KC_EQUAL (KC_EQL) => Equal,
-    #[doc = r"Keyboard `[` and `{`."]
-    KC_LEFT_BRACKET (KC_LBRC) => LeftBracket,
-    #[doc = r"Keyboard `]` and `}`."]
-    KC_RIGHT_BRACKET (KC_RBRC) => RightBracket,
-    #[doc = r"Keyboard `\` and `|`."]
-    KC_BACKSLASH (KC_BSLS) => Backslash,
-    #[doc = r"Keyboard non-US `#` and `~`."]
-    KC_NONUS_HASH (KC_NUHS) => NonUSHash,
-    #[doc = r"Keyboard `;` and `:`."]
-    KC_SEMICOLON (KC_SCLN) => Semicolon,
-    #[doc = r#"Keyboard `'` and `"`."#]
-    KC_QUOTE (KC_QOUT) => Apostrophe,
-    #[doc = r"Keyboard `` ` `` and `~`."]
-    KC_GRAVE (KC_GRV) => Grave,
-    #[doc = r"Keyboard `,` and `<`."]
-    KC_COMMA (KC_COMM) => Comma,
-    #[doc = r"Keyboard `.` and `>`."]
-    KC_DOT => Dot,
-    #[doc = r"Keyboard `/` and `?`."]
-    KC_SLASH (KC_SLSH) => Slash,
-    #[doc = r"Keyboard `Caps Lock`."]
-    KC_CAPSLOCK (KC_CAPS) => CapsLock,
-    #[doc = r"Keyboard `F1`."]
-    KC_F1 => F1,
-    #[doc = r"Keyboard `F2`."]
-    KC_F2 => F2,
-    #[doc = r"Keyboard `F3`."]
-    KC_F3 => F3,
-    #[doc = r"Keyboard `F4`."]
-    KC_F4 => F4,
-    #[doc = r"Keyboard `F5`."]
-    KC_F5 => F5,
-    #[doc = r"Keyboard `F6`."]
-    KC_F6 => F6,
-    #[doc = r"Keyboard `F7`."]
-    KC_F7 => F7,
-    #[doc = r"Keyboard `F8`."]
-    KC_F8 => F8,
-    #[doc = r"Keyboard `F9`."]
-    KC_F9 => F9,
-    #[doc = r"Keyboard `F10`."]
-    KC_F10 => F10,
-    #[doc = r"Keyboard `F11`."]
-    KC_F11 => F11,
-    #[doc = r"Keyboard `F12`."]
-    KC_F12 => F12,
-    #[doc = r"Keyboard `Print Screen`."]
-    KC_PRINT_SCREEN (KC_PSCR) => PrintScreen,
-    #[doc = r"Keyboard `Scroll Lock`."]
-    KC_SCROLL_LOCK (KC_SCRL) => ScrollLock,
-    #[doc = r"Keyboard `Pause`."]
-    KC_PAUSE (KC_PAUS) => Pause,
-    #[doc = r"Keyboard `Insert`."]
-    KC_INSERT (KC_INS) => Insert,
-    #[doc = r"Keyboard `Home`."]
-    KC_HOME => Home,
-    #[doc = r"Keyboard `Page Up`."]
-    KC_PAGE_UP (KC_PGUP) => PageUp,
-    #[doc = r"Keyboard `Delete`."]
-    KC_DELETE (KC_DEL) => Delete,
-    #[doc = r"Keyboard `End`."]
-    KC_END => End,
-    #[doc = r"Keyboard `Page Down`."]
-    KC_PAGE_DOWN (KC_PGDN) => PageDown,
-    #[doc = r"Keyboard `Right Arrow`."]
-    KC_RIGHT (KC_RGHT) => RightArrow,
-    #[doc = r"Keyboard `Left Arrow`."]
-    KC_LEFT => LeftArrow,
-    #[doc = r"Keyboard `Down Arrow`."]
-    KC_DOWN => DownArrow,
-    #[doc = r"Keyboard `Up Arrow`."]
-    KC_UP => UpArrow,
-    #[doc = r"Keypad `Num Lock`."]
-    KC_NUM_LOCK (KC_NUM) => KeypadNumLock,
-    #[doc = r"Keypad `/`."]
-    KC_KP_DIVIDE => KeypadDivide,
-    #[doc = r"Keypad `*`."]
-    KC_KP_MULTIPLY => KeypadMultiply,
-    #[doc = r"Keypad `-`."]
-    KC_KP_MINUS => KeypadSubtract,
-    #[doc = r"Keypad `+`."]
-    KC_KP_PLUS => KeypadAdd,
-    #[doc = r"Keypad `Enter`."]
-    KC_KP_ENTER => KeypadEnter,
-    #[doc = r"Keypad `1` and `End`."]
-    KC_KP_1 => Keypad1,
-    #[doc = r"Keypad `2` and `Down Arrow`."]
-    KC_KP_2 => Keypad2,
-    #[doc = r"Keypad `3` and `Page Down`."]
-    KC_KP_3 => Keypad3,
-    #[doc = r"Keypad `4` and `Left Arrow`."]
-    KC_KP_4 => Keypad4,
-    #[doc = r"Keypad `5`."]
-    KC_KP_5 => Keypad5,
-    #[doc = r"Keypad `6` and `Right Arrow`."]
-    KC_KP_6 => Keypad6,
-    #[doc = r"Keypad `7` and `Home`."]
-    KC_KP_7 => Keypad7,
-    #[doc = r"Keypad `8` and `Up Arrow`."]
-    KC_KP_8 => Keypad8,
-    #[doc = r"Keypad `9` and `Page Up`."]
-    KC_KP_9 => Keypad9,
-    #[doc = r"Keypad `0` and `Insert`."]
-    KC_KP_0 => Keypad0,
-    #[doc = r"Keypad `.` and `Delete`."]
-    KC_KP_DOT => KeypadDot,
-    #[doc = r"Keyboard non-US `\` and `|`."]
-    KC_NONUS_BACKSLASH (KC_NUBS) => NonUSBackslash,
-    #[doc = r"Keyboard `Application`."]
-    KC_APPLICATION (KC_APP) => Application,
-    #[doc = r"Keyboard `Power`."]
-    KC_POWER => Power,
-    #[doc = r"Keyboard `=`."]
-    KC_KP_EQUAL => KeypadEqual,
-    #[doc = r"Keyboard `F13`."]
-    KC_F13 => F13,
-    #[doc = r"Keyboard `F14`."]
-    KC_F14 => F14,
-    #[doc = r"Keyboard `F15`."]
-    KC_F15 => F15,
-    #[doc = r"Keyboard `F16`."]
-    KC_F16 => F16,
-    #[doc = r"Keyboard `F17`."]
-    KC_F17 => F17,
-    #[doc = r"Keyboard `F18`."]
-    KC_F18 => F18,
-    #[doc = r"Keyboard `F19`."]
-    KC_F19 => F19,
-    #[doc = r"Keyboard `F20`."]
-    KC_F20 => F20,
-    #[doc = r"Keyboard `F21`."]
-    KC_F21 => F21,
-    #[doc = r"Keyboard `F22`."]
-    KC_F22 => F22,
-    #[doc = r"Keyboard `F23`."]
-    KC_F23 => F23,
-    #[doc = r"Keyboard `F24`."]
-    KC_F24 => F24,
-    #[doc = r"Keyboard `Execute`."]
-    KC_EXECUTE (KC_EXEC) => Execute,
-    #[doc = r"Keyboard `Help`."]
-    KC_HELP => Help,
-    #[doc = r"Keyboard `Menu`."]
-    KC_MENU => Menu,
-    #[doc = r"Keyboard `Select`."]
-    KC_SELECT (KC_SLCT) => Select,
-    #[doc = r"Keyboard `Stop`."]
-    KC_STOP => Stop,
-    #[doc = r"Keyboard `Again`."]
-    KC_AGAIN (KC_AGIN) => Again,
-    #[doc = r"Keyboard `Undo`."]
-    KC_UNDO => Undo,
-    #[doc = r"Keyboard `Cut`."]
-    KC_CUT => Cut,
-    #[doc = r"Keyboard `Copy`."]
-    KC_COPY => Copy,
-    #[doc = r"Keyboard `Paste`."]
-    KC_PASTE (KC_PSTE) => Paste,
-    #[doc = r"Keyboard `Find`."]
-    KC_FIND => Find,
-    #[doc = r"Keyboard `Mute`."]
-    KC_MUTE => Mute,
-    #[doc = r"Keyboard `Volume Up`."]
-    KC_VOLUME_UP (KC_VLUP) => VolumeUp,
-    #[doc = r"Keyboard `Volume Down`."]
-    KC_VOLUME_DOWN (KC_VLDN) => VolumeDown,
-    #[doc = r"Keyboard `Locking Caps Lock`."]
-    KC_LOCKING_CAPS_LOCK (KC_LCAP) => LockingCapsLock,
-    #[doc = r"Keyboard `Locking Num Lock`."]
-    KC_LOCKING_NUM (KC_LNUM) => LockingNumLock,
-    #[doc = r"Keyboard `Locking Scroll Lock`."]
-    KC_LOCKING_SCROLL (KC_LSCR)=> LockingScrollLock,
-    #[doc = r"Keypad `,`."]
-    KC_KP_COMMA => KeypadComma,
-    #[doc = r"Keypad `=`."]
-    KC_KP_EQUAL_AS400 => KeypadEqualSign,
-    #[doc = r"Keyboard `International 1`."]
-    KC_INTERNATIONAL_1 (KC_INT1) => International1,
-    #[doc = r"Keyboard `International 2`."]
-    KC_INTERNATIONAL_2 (KC_INT2) => International2,
-    #[doc = r"Keyboard `International 3`."]
-    KC_INTERNATIONAL_3 (KC_INT3) => International3,
-    #[doc = r"Keyboard `International 4`."]
-    KC_INTERNATIONAL_4 (KC_INT4) => International4,
-    #[doc = r"Keyboard `International 5`."]
-    KC_INTERNATIONAL_5 (KC_INT5) => International5,
-    #[doc = r"Keyboard `International 6`."]
-    KC_INTERNATIONAL_6 (KC_INT6) => International6,
-    #[doc = r"Keyboard `International 7`."]
-    KC_INTERNATIONAL_7 (KC_INT7) => International7,
-    #[doc = r"Keyboard `International 8`."]
-    KC_INTERNATIONAL_8 (KC_INT8) => International8,
-    #[doc = r"Keyboard `International 9`."]
-    KC_INTERNATIONAL_9 (KC_INT9) => International9,
-    #[doc = r"Keyboard `Language 1`."]
-    KC_LANGUAGE_1 (KC_LANG1) => Language1,
-    #[doc = r"Keyboard `Language 2`."]
-    KC_LANGUAGE_2 (KC_LANG2) => Language2,
-    #[doc = r"Keyboard `Language 3`."]
-    KC_LANGUAGE_3 (KC_LANG3) => Language3,
-    #[doc = r"Keyboard `Language 4`."]
-    KC_LANGUAGE_4 (KC_LANG4) => Language4,
-    #[doc = r"Keyboard `Language 5`."]
-    KC_LANGUAGE_5 (KC_LANG5) => Language5,
-    #[doc = r"Keyboard `Language 6`."]
-    KC_LANGUAGE_6 (KC_LANG6) => Language6,
-    #[doc = r"Keyboard `Language 7`."]
-    KC_LANGUAGE_7 (KC_LANG7) => Language7,
-    #[doc = r"Keyboard `Language 8`."]
-    KC_LANGUAGE_8 (KC_LANG8) => Language8,
-    #[doc = r"Keyboard `Language 9`."]
-    KC_LANGUAGE_9 (KC_LANG9) => Language9,
-    #[doc = r"Keyboard `Alternate Erase`. "]
-    KC_ALTERNATE_ERASE (KC_ERAS) => AlternateErase,
-    #[doc = r"Keyboard `SysReq/Attention`. "]
-    KC_SYSREQ => SysReqAttention,
-    #[doc = r"Keyboard `Cancel`. "]
-    KC_CANCEL (KC_CNCL) => Cancel,
-    #[doc = r"Keyboard `Clear`. "]
-    KC_CLEAR (KC_CRL) => Clear,
-    #[doc = r"Keyboard `Prior`. "]
-    KC_PRIOR (KC_PRIR) => Prior,
-    #[doc = r"Keyboard `Return`. "]
-    KC_RETURN (KC_RETN, KC_RET) => Return,
-    #[doc = r"Keyboard `Separator`. "]
-    KC_SEPARATOR (KC_SEPR) => Separator,
-    #[doc = r"Keyboard `Out`. "]
-    KC_OUT => Out,
-    #[doc = r"Keyboard `Oper`. "]
-    KC_OPER => Oper,
-    #[doc = r"Keyboard `Clear/Again`. "]
-    KC_CLEAR_AGAIN (KC_CLAG) => ClearAgain,
-    #[doc = r"Keyboard `CrSel/Props`. "]
-    KC_CRSEL (KC_CRSL) => CrSelProps,
-    #[doc = r"Keyboard `ExSel`. "]
-    KC_EXSEL (KC_EXSL) => ExSel,
-    #[doc = r"Keyboard `Left Control`."]
-    KC_LEFT_CONTROL (KC_LCTL) => LeftControl,
-    #[doc = r"Keyboard `Left Shift`."]
-    KC_LEFT_SHIFT (KC_LSFT) => LeftShift,
-    #[doc = r"Keyboard `Left ALT`."]
-    KC_LEFT_ALT (KC_LALT) => LeftAlt,
-    #[doc = r"Keyboard `Left GUI`."]
-    KC_LEFT_GUI (KC_LGUI, KC_LCMD, KC_LWIN) => LeftGUI,
-    #[doc = r"Keyboard `Right Control`."]
-    KC_RIGHT_CONTROL (KC_RCTL) => RightControl,
-    #[doc = r"Keyboard `Right Shift`."]
-    KC_RIGHT_SHIFT (KC_RSFT) => RightShift,
-    #[doc = r"Keyboard `Right ALT`."]
-    KC_RIGHT_ALT (KC_RALT) => RightAlt,
-    #[doc = r"Keyboard `Right GUI`."]
-    KC_RIGHT_GUI (KC_RGUI, KC_RCMD, KC_RWIN) => RightGUI,
+    /// Keyboard `a` and `A`.
+    KC_A => Code::KeyboardA,
+    /// Keyboard `b` and `B`.
+    KC_B => Code::KeyboardB,
+    /// Keyboard `c` and `C`.
+    KC_C => Code::KeyboardC,
+    /// Keyboard `d` and `D`.
+    KC_D => Code::KeyboardD,
+    /// Keyboard `e` and `E`.
+    KC_E => Code::KeyboardE,
+    /// Keyboard `f` and `F`.
+    KC_F => Code::KeyboardF,
+    /// Keyboard `g` and `G`.
+    KC_G => Code::KeyboardG,
+    /// Keyboard `h` and `H`.
+    KC_H => Code::KeyboardH,
+    /// Keyboard `i` and `I`.
+    KC_I => Code::KeyboardI,
+    /// Keyboard `j` and `J`.
+    KC_J => Code::KeyboardJ,
+    /// Keyboard `k` and `K`.
+    KC_K => Code::KeyboardK,
+    /// Keyboard `l` and `L`.
+    KC_L => Code::KeyboardL,
+    /// Keyboard `m` and `M`.
+    KC_M => Code::KeyboardM,
+    /// Keyboard `n` and `N`.
+    KC_N => Code::KeyboardN,
+    /// Keyboard `o` and `O`.
+    KC_O => Code::KeyboardO,
+    /// Keyboard `p` and `P`.
+    KC_P => Code::KeyboardP,
+    /// Keyboard `q` and `Q`.
+    KC_Q => Code::KeyboardQ,
+    /// Keyboard `r` and `R`.
+    KC_R => Code::KeyboardR,
+    /// Keyboard `s` and `S`.
+    KC_S => Code::KeyboardS,
+    /// Keyboard `t` and `T`.
+    KC_T => Code::KeyboardT,
+    /// Keyboard `u` and `U`.
+    KC_U => Code::KeyboardU,
+    /// Keyboard `v` and `V`.
+    KC_V => Code::KeyboardV,
+    /// Keyboard `w` and `W`.
+    KC_W => Code::KeyboardW,
+    /// Keyboard `x` and `X`.
+    KC_X => Code::KeyboardX,
+    /// Keyboard `y` and `Y`.
+    KC_Y => Code::KeyboardY,
+    /// Keyboard `z` and `Z`.
+    KC_Z => Code::KeyboardZ,
+    /// Keyboard `1` and `!`.
+    KC_1 => Code::Keyboard1,
+    /// Keyboard `2` and `@`.
+    KC_2 => Code::Keyboard2,
+    /// Keyboard `3` and `#`.
+    KC_3 => Code::Keyboard3,
+    /// Keyboard `4` and `$`.
+    KC_4 => Code::Keyboard4,
+    /// Keyboard `5` and `%`.
+    KC_5 => Code::Keyboard5,
+    /// Keyboard `6` and `^`.
+    KC_6 => Code::Keyboard6,
+    /// Keyboard `7` and `&`.
+    KC_7 => Code::Keyboard7,
+    /// Keyboard `8` and `*`.
+    KC_8 => Code::Keyboard8,
+    /// Keyboard `9` and `(`.
+    KC_9 => Code::Keyboard9,
+    /// Keyboard `0` and `)`.
+    KC_0 => Code::Keyboard0,
+    /// Keyboard `Enter`.
+    KC_ENTER (KC_ENTR, KC_ENT) => Code::Enter,
+    /// Keyboard `Escape`.
+    KC_ESCAPE (KC_ESC) => Code::Escape,
+    /// Keyboard `Backspace`.
+    KC_BACKSPACE (KC_BSPC) => Code::Backspace,
+    /// Keyboard `Tab`.
+    KC_TAB => Code::Tab,
+    /// Keyboard `Space`.
+    KC_SPACE (KC_SPC) => Code::Space,
+    /// Keyboard `-` and `_`.
+    KC_MINUS (KC_MINS) => Code::Minus,
+    /// Keyboard `=` and `+`.
+    KC_EQUAL (KC_EQL) => Code::Equal,
+    /// Keyboard `[` and `{`.
+    KC_LEFT_BRACKET (KC_LBRC) => Code::LeftBracket,
+    /// Keyboard `]` and `}`.
+    KC_RIGHT_BRACKET (KC_RBRC) => Code::RightBracket,
+    /// Keyboard `\` and `|`.
+    KC_BACKSLASH (KC_BSLS) => Code::Backslash,
+    /// Keyboard non-US `#` and `~`.
+    KC_NONUS_HASH (KC_NUHS) => Code::NonUSHash,
+    /// Keyboard `;` and `:`.
+    KC_SEMICOLON (KC_SCLN) => Code::Semicolon,
+    /// Keyboard `'` and `"`."#]
+    KC_QUOTE (KC_QOUT) => Code::Apostrophe,
+    /// Keyboard `` ` `` and `~`.
+    KC_GRAVE (KC_GRV) => Code::Grave,
+    /// Keyboard `,` and `<`.
+    KC_COMMA (KC_COMM) => Code::Comma,
+    /// Keyboard `.` and `>`.
+    KC_DOT => Code::Dot,
+    /// Keyboard `/` and `?`.
+    KC_SLASH (KC_SLSH) => Code::Slash,
+    /// Keyboard `Caps Lock`.
+    KC_CAPSLOCK (KC_CAPS) => Code::CapsLock,
+    /// Keyboard `F1`.
+    KC_F1 => Code::F1,
+    /// Keyboard `F2`.
+    KC_F2 => Code::F2,
+    /// Keyboard `F3`.
+    KC_F3 => Code::F3,
+    /// Keyboard `F4`.
+    KC_F4 => Code::F4,
+    /// Keyboard `F5`.
+    KC_F5 => Code::F5,
+    /// Keyboard `F6`.
+    KC_F6 => Code::F6,
+    /// Keyboard `F7`.
+    KC_F7 => Code::F7,
+    /// Keyboard `F8`.
+    KC_F8 => Code::F8,
+    /// Keyboard `F9`.
+    KC_F9 => Code::F9,
+    /// Keyboard `F10`.
+    KC_F10 => Code::F10,
+    /// Keyboard `F11`.
+    KC_F11 => Code::F11,
+    /// Keyboard `F12`.
+    KC_F12 => Code::F12,
+    /// Keyboard `Print Screen`.
+    KC_PRINT_SCREEN (KC_PSCR) => Code::PrintScreen,
+    /// Keyboard `Scroll Lock`.
+    KC_SCROLL_LOCK (KC_SCRL) => Code::ScrollLock,
+    /// Keyboard `Pause`.
+    KC_PAUSE (KC_PAUS) => Code::Pause,
+    /// Keyboard `Insert`.
+    KC_INSERT (KC_INS) => Code::Insert,
+    /// Keyboard `Home`.
+    KC_HOME => Code::Home,
+    /// Keyboard `Page Up`.
+    KC_PAGE_UP (KC_PGUP) => Code::PageUp,
+    /// Keyboard `Delete`.
+    KC_DELETE (KC_DEL) => Code::Delete,
+    /// Keyboard `End`.
+    KC_END => Code::End,
+    /// Keyboard `Page Down`.
+    KC_PAGE_DOWN (KC_PGDN) => Code::PageDown,
+    /// Keyboard `Right Arrow`.
+    KC_RIGHT (KC_RGHT) => Code::RightArrow,
+    /// Keyboard `Left Arrow`.
+    KC_LEFT => Code::LeftArrow,
+    /// Keyboard `Down Arrow`.
+    KC_DOWN => Code::DownArrow,
+    /// Keyboard `Up Arrow`.
+    KC_UP => Code::UpArrow,
+    /// Keypad `Num Lock`.
+    KC_NUM_LOCK (KC_NUM) => Code::KeypadNumLock,
+    /// Keypad `/`.
+    KC_KP_DIVIDE => Code::KeypadDivide,
+    /// Keypad `*`.
+    KC_KP_MULTIPLY => Code::KeypadMultiply,
+    /// Keypad `-`.
+    KC_KP_MINUS => Code::KeypadSubtract,
+    /// Keypad `+`.
+    KC_KP_PLUS => Code::KeypadAdd,
+    /// Keypad `Enter`.
+    KC_KP_ENTER => Code::KeypadEnter,
+    /// Keypad `1` and `End`.
+    KC_KP_1 => Code::Keypad1,
+    /// Keypad `2` and `Down Arrow`.
+    KC_KP_2 => Code::Keypad2,
+    /// Keypad `3` and `Page Down`.
+    KC_KP_3 => Code::Keypad3,
+    /// Keypad `4` and `Left Arrow`.
+    KC_KP_4 => Code::Keypad4,
+    /// Keypad `5`.
+    KC_KP_5 => Code::Keypad5,
+    /// Keypad `6` and `Right Arrow`.
+    KC_KP_6 => Code::Keypad6,
+    /// Keypad `7` and `Home`.
+    KC_KP_7 => Code::Keypad7,
+    /// Keypad `8` and `Up Arrow`.
+    KC_KP_8 => Code::Keypad8,
+    /// Keypad `9` and `Page Up`.
+    KC_KP_9 => Code::Keypad9,
+    /// Keypad `0` and `Insert`.
+    KC_KP_0 => Code::Keypad0,
+    /// Keypad `.` and `Delete`.
+    KC_KP_DOT => Code::KeypadDot,
+    /// Keyboard non-US `\` and `|`.
+    KC_NONUS_BACKSLASH (KC_NUBS) => Code::NonUSBackslash,
+    /// Keyboard `Application`.
+    KC_APPLICATION (KC_APP) => Code::Application,
+    /// Keyboard `Power`.
+    KC_POWER => Code::Power,
+    /// Keyboard `=`.
+    KC_KP_EQUAL => Code::KeypadEqual,
+    /// Keyboard `F13`.
+    KC_F13 => Code::F13,
+    /// Keyboard `F14`.
+    KC_F14 => Code::F14,
+    /// Keyboard `F15`.
+    KC_F15 => Code::F15,
+    /// Keyboard `F16`.
+    KC_F16 => Code::F16,
+    /// Keyboard `F17`.
+    KC_F17 => Code::F17,
+    /// Keyboard `F18`.
+    KC_F18 => Code::F18,
+    /// Keyboard `F19`.
+    KC_F19 => Code::F19,
+    /// Keyboard `F20`.
+    KC_F20 => Code::F20,
+    /// Keyboard `F21`.
+    KC_F21 => Code::F21,
+    /// Keyboard `F22`.
+    KC_F22 => Code::F22,
+    /// Keyboard `F23`.
+    KC_F23 => Code::F23,
+    /// Keyboard `F24`.
+    KC_F24 => Code::F24,
+    /// Keyboard `Execute`.
+    KC_EXECUTE (KC_EXEC) => Code::Execute,
+    /// Keyboard `Help`.
+    KC_HELP => Code::Help,
+    /// Keyboard `Menu`.
+    KC_MENU => Code::Menu,
+    /// Keyboard `Select`.
+    KC_SELECT (KC_SLCT) => Code::Select,
+    /// Keyboard `Stop`.
+    KC_STOP => Code::Stop,
+    /// Keyboard `Again`.
+    KC_AGAIN (KC_AGIN) => Code::Again,
+    /// Keyboard `Undo`.
+    KC_UNDO => Code::Undo,
+    /// Keyboard `Cut`.
+    KC_CUT => Code::Cut,
+    /// Keyboard `Copy`.
+    KC_COPY => Code::Copy,
+    /// Keyboard `Paste`.
+    KC_PASTE (KC_PSTE) => Code::Paste,
+    /// Keyboard `Find`.
+    KC_FIND => Code::Find,
+    /// Keyboard `Mute`.
+    KC_MUTE => Code::Mute,
+    /// Keyboard `Volume Up`.
+    KC_VOLUME_UP (KC_VLUP) => Code::VolumeUp,
+    /// Keyboard `Volume Down`.
+    KC_VOLUME_DOWN (KC_VLDN) => Code::VolumeDown,
+    /// Keyboard `Locking Caps Lock`.
+    KC_LOCKING_CAPS_LOCK (KC_LCAP) => Code::LockingCapsLock,
+    /// Keyboard `Locking Num Lock`.
+    KC_LOCKING_NUM (KC_LNUM) => Code::LockingNumLock,
+    /// Keyboard `Locking Scroll Lock`.
+    KC_LOCKING_SCROLL (KC_LSCR)=> Code::LockingScrollLock,
+    /// Keypad `,`.
+    KC_KP_COMMA => Code::KeypadComma,
+    /// Keypad `=`.
+    KC_KP_EQUAL_AS400 => Code::KeypadEqualSign,
+    /// Keyboard `International 1`.
+    KC_INTERNATIONAL_1 (KC_INT1) => Code::International1,
+    /// Keyboard `International 2`.
+    KC_INTERNATIONAL_2 (KC_INT2) => Code::International2,
+    /// Keyboard `International 3`.
+    KC_INTERNATIONAL_3 (KC_INT3) => Code::International3,
+    /// Keyboard `International 4`.
+    KC_INTERNATIONAL_4 (KC_INT4) => Code::International4,
+    /// Keyboard `International 5`.
+    KC_INTERNATIONAL_5 (KC_INT5) => Code::International5,
+    /// Keyboard `International 6`.
+    KC_INTERNATIONAL_6 (KC_INT6) => Code::International6,
+    /// Keyboard `International 7`.
+    KC_INTERNATIONAL_7 (KC_INT7) => Code::International7,
+    /// Keyboard `International 8`.
+    KC_INTERNATIONAL_8 (KC_INT8) => Code::International8,
+    /// Keyboard `International 9`.
+    KC_INTERNATIONAL_9 (KC_INT9) => Code::International9,
+    /// Keyboard `Language 1`.
+    KC_LANGUAGE_1 (KC_LANG1) => Code::Language1,
+    /// Keyboard `Language 2`.
+    KC_LANGUAGE_2 (KC_LANG2) => Code::Language2,
+    /// Keyboard `Language 3`.
+    KC_LANGUAGE_3 (KC_LANG3) => Code::Language3,
+    /// Keyboard `Language 4`.
+    KC_LANGUAGE_4 (KC_LANG4) => Code::Language4,
+    /// Keyboard `Language 5`.
+    KC_LANGUAGE_5 (KC_LANG5) => Code::Language5,
+    /// Keyboard `Language 6`.
+    KC_LANGUAGE_6 (KC_LANG6) => Code::Language6,
+    /// Keyboard `Language 7`.
+    KC_LANGUAGE_7 (KC_LANG7) => Code::Language7,
+    /// Keyboard `Language 8`.
+    KC_LANGUAGE_8 (KC_LANG8) => Code::Language8,
+    /// Keyboard `Language 9`.
+    KC_LANGUAGE_9 (KC_LANG9) => Code::Language9,
+    /// Keyboard `Alternate Erase`.
+    KC_ALTERNATE_ERASE (KC_ERAS) => Code::AlternateErase,
+    /// Keyboard `SysReq/Attention`.
+    KC_SYSREQ => Code::SysReqAttention,
+    /// Keyboard `Cancel`.
+    KC_CANCEL (KC_CNCL) => Code::Cancel,
+    /// Keyboard `Clear`.
+    KC_CLEAR (KC_CRL) => Code::Clear,
+    /// Keyboard `Prior`.
+    KC_PRIOR (KC_PRIR) => Code::Prior,
+    /// Keyboard `Return`.
+    KC_RETURN (KC_RETN, KC_RET) => Code::Return,
+    /// Keyboard `Separator`.
+    KC_SEPARATOR (KC_SEPR) => Code::Separator,
+    /// Keyboard `Out`.
+    KC_OUT => Code::Out,
+    /// Keyboard `Oper`.
+    KC_OPER => Code::Oper,
+    /// Keyboard `Clear/Again`.
+    KC_CLEAR_AGAIN (KC_CLAG) => Code::ClearAgain,
+    /// Keyboard `CrSel/Props`.
+    KC_CRSEL (KC_CRSL) => Code::CrSelProps,
+    /// Keyboard `ExSel`.
+    KC_EXSEL (KC_EXSL) => Code::ExSel,
+    /// Keyboard `Left Control`.
+    KC_LEFT_CONTROL (KC_LCTL) => Code::LeftControl,
+    /// Keyboard `Left Shift`.
+    KC_LEFT_SHIFT (KC_LSFT) => Code::LeftShift,
+    /// Keyboard `Left ALT`.
+    KC_LEFT_ALT (KC_LALT) => Code::LeftAlt,
+    /// Keyboard `Left GUI`.
+    KC_LEFT_GUI (KC_LGUI, KC_LCMD, KC_LWIN) => Code::LeftGUI,
+    /// Keyboard `Right Control`.
+    KC_RIGHT_CONTROL (KC_RCTL) => Code::RightControl,
+    /// Keyboard `Right Shift`.
+    KC_RIGHT_SHIFT (KC_RSFT) => Code::RightShift,
+    /// Keyboard `Right ALT`.
+    KC_RIGHT_ALT (KC_RALT) => Code::RightAlt,
+    /// Keyboard `Right GUI`.
+    KC_RIGHT_GUI (KC_RGUI, KC_RCMD, KC_RWIN) => Code::RightGUI,
 }
 
 /// Activate `layer` while key is being held.
