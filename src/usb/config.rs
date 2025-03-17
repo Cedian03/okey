@@ -55,17 +55,17 @@ impl<'a> Config<'a> {
         self
     }
 
-    pub const fn manufacturer(mut self, manufacturer: &'static str) -> Self {
+    pub const fn manufacturer(mut self, manufacturer: &'a str) -> Self {
         self.manufacturer = Some(manufacturer);
         self
     }
 
-    pub const fn product(mut self, product: &'static str) -> Self {
+    pub const fn product(mut self, product: &'a str) -> Self {
         self.product = Some(product);
         self
     }
 
-    pub const fn serial_number(mut self, serial_number: &'static str) -> Self {
+    pub const fn serial_number(mut self, serial_number: &'a str) -> Self {
         self.serial_number = Some(serial_number);
         self
     }
