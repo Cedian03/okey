@@ -3,12 +3,12 @@
 mod counter;
 mod simple;
 
-use crate::usb::SCAN_INTERVAL;
+use crate::SCAN_INTERVAL;
+
+use super::Scan;
 
 pub use counter::Counter;
 pub use simple::Simple;
-
-use super::Scan;
 
 const DEBOUNCE: u16 = 5; // ms
 const DEBOUNCE_COUNT: u16 = DEBOUNCE / (SCAN_INTERVAL as u16);

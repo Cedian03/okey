@@ -1,4 +1,3 @@
-
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum Code {

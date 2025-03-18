@@ -24,7 +24,7 @@ async fn main(_spawner: Spawner) {
     let driver = Driver::new(p.USB, Irqs);
     let config = Config::default();
     let mut state = State::default();
-    let usb = UsbInterface::new(driver, config, &mut state);
+    let interface = UsbInterface::new(driver, config, &mut state);
 
     let scanner = {
         let cols = [
@@ -55,7 +55,7 @@ async fn main(_spawner: Spawner) {
         ]
     };
 
-    let board = Keyboard::new(scanner, map);
-
-    usb.run(board).await;
+    Keyboard::new(scanner, map, interface)
+        .run()
+        .await
 }
