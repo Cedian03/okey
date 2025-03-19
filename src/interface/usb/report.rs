@@ -1,5 +1,3 @@
-use crate::Event;
-
 use super::Code;
 
 /// No event indicated.
@@ -65,13 +63,6 @@ impl Report {
 
     pub const fn as_slice(&self) -> &[u8] {
         self.inner.as_slice()
-    }
-
-    pub fn handle(&mut self, event: Event, code: Code) -> Result<(), ReportError> {
-        match event {
-            Event::Pressed => self.add(code),
-            Event::Released => self.remove(code)
-        }
     }
 
     pub fn add(&mut self, code: Code) -> Result<(), ReportError> {
