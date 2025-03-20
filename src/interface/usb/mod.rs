@@ -4,8 +4,6 @@ mod handlers;
 mod report;
 mod state;
 
-use embassy_futures::join::join;
-use embassy_time::{Duration, Ticker};
 use embassy_usb::{
     class::hid::{HidReader, HidReaderWriter, HidWriter}, 
     driver::Driver, 
@@ -13,20 +11,13 @@ use embassy_usb::{
     UsbDevice
 };
 
-use crate::{
-    action::Action, 
-    event::{Event, events}, 
-    scan::Scan, 
-    Keyboard
-};
+use super::{Interface, Handler};
 
 pub use code::Code;
 pub use config::Config;
 pub use handlers::{OkeyDeviceHandler, OkeyRequestHandler};
 pub use report::{Report, ReportError};
 pub use state::State;
-
-pub const SCAN_INTERVAL: u64 = 5; // ms
 
 pub struct UsbInterface<'a, T: Driver<'a>> {
     device: UsbDevice<'a, T>,
@@ -61,35 +52,43 @@ impl<'a, T: Driver<'a>> UsbInterface<'a, T> {
             writer,
         }
     }
+}
 
-    pub async fn run<S: Scan<W, H>, const W: usize, const H: usize, const D: usize>(self, mut board: Keyboard<S, W, H, D>) {
-        let Self { mut device, _reader, mut writer } = self;
+impl<'d, D: Driver<'d>> Interface for UsbInterface<'d, D> {
+    type Handler = UsbHandler<'d, D>;
 
-        let key_fut = async {
-            let mut scan = &mut [[false; W]; H];
-            let mut prev_scan = &mut [[false; W]; H];
+    fn start(mut self) -> (Self::Handler, impl Future) {
+        (
+            UsbHandler::new(self.writer),
+            async move { self.device.run().await }
+        )
+    }
+}
 
-            let mut report = Report::default();
+pub struct UsbHandler<'d, D: Driver<'d>> {
+    writer: HidWriter<'d, D, 8>,
+    report: Report,
+}
 
-            let mut ticker = Ticker::every(Duration::from_millis(SCAN_INTERVAL));
+impl<'d, D: Driver<'d>> UsbHandler<'d, D> {
+    const fn new(writer: HidWriter<'d, D, 8>) -> Self {
+        Self {
+            writer,
+            report: Report::new(),
+        }
+    }
+}
 
-            loop {
-                ticker.next().await;
+impl<'d, D: Driver<'d>> Handler for UsbHandler<'d, D> {
+    fn register_code(&mut self, code: Code) {
+        let _ = self.report.add(code);
+    }
 
-                board.scanner.scan(scan).await; 
-    
-                for ((x, y), event) in events(scan, prev_scan) {
-                    if let Action::Code(code) = board.process_event(x, y, Event::new(scan[y][x])) {
-                        let _ = report.handle(event, code);
-                    } 
-                }
+    fn unregister_code(&mut self, code: Code) {
+        let _ = self.report.remove(code);
+    }
 
-                let _ = writer.write(report.as_slice()).await;
-    
-                core::mem::swap(&mut scan, &mut prev_scan);
-            }
-        };
-
-        join(device.run(), key_fut).await;
-    } 
+    async fn flush(&mut self) {
+        let _ = self.writer.write(self.report.as_slice()).await;
+    }
 }

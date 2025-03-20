@@ -2,7 +2,11 @@
 
 pub use crate::{
     action::Action,
-    usb::{Code, Config, State, UsbInterface},
+    interface::{
+        usb::{Code, Config, State, UsbInterface},
+        Handler, 
+        Interface, 
+    },
     scan::{Col2Row, Row2Col, Scan},
     Keyboard,
 };

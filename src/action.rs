@@ -1,4 +1,4 @@
-use crate::usb::Code;
+use crate::interface::usb::Code;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub enum Action {
