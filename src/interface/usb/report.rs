@@ -98,6 +98,7 @@ impl Report {
     
             while i < self.len - 1  {
                 self.inner.codes.swap(i, i + 1);
+                i += 1;
             }
     
             self.len -= 1;
