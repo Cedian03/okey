@@ -47,7 +47,7 @@ pub const REPORT_DESCRIPTOR: &[u8] = &[
 #[derive(Clone, Copy, Debug)]
 pub struct ReportError;
 
-#[derive(Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Report {
     inner: Inner,
     len: usize,
@@ -109,7 +109,7 @@ impl Report {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 #[repr(C)]
 struct Inner {
     modifiers: u8,

@@ -9,15 +9,18 @@ pub mod event;
 pub mod interface;
 pub mod scan;
 
+use embassy_futures::join;
+use embassy_time::{Duration, Instant};
+
 use action::Action;
 use action_map::ActionMap;
-use embassy_futures::join;
-use embassy_time::{Duration, Ticker};
-use event::{Event, events};
+use event::Event;
 use interface::{Handler, Interface};
 use scan::Scan;
 
 pub const SCAN_INTERVAL: u64 = 5; // ms
+
+pub const TAP_TIMEOUT: Duration = Duration::from_millis(1000);
 
 pub struct Keyboard<S, I, const W: usize, const H: usize, const D: usize> {
     scanner: S,
@@ -58,10 +61,10 @@ struct RunningKeyboard<S, T, const W: usize, const H: usize, const D: usize> {
     scanner: S,
     action_map: ActionMap<W, H, D>,
     handler: T,
-    current_action: [[Option<Action>; W]; H], 
+    current_action: [[Option<(Action, Option<Instant>)>; W]; H], 
 }
 
-impl<S, T, const W: usize, const H: usize, const D: usize> RunningKeyboard<S, T, W, H, D>
+impl<S, T, const W: usize, const H: usize, const D: usize> RunningKeyboard<S, T,  W, H, D>
 where 
     S: Scan<W, H>,
     T: Handler,
@@ -79,17 +82,24 @@ where
         let mut scan = &mut [[false; W]; H];
         let mut prev_scan = &mut [[false; W]; H];
 
-        let mut ticker = Ticker::every(Duration::from_millis(SCAN_INTERVAL));
-
         loop {
-            ticker.next().await;
+            self.handler.ready().await;
 
             self.scanner.scan(scan).await; 
-            events(scan, prev_scan)
-                .for_each(|((x, y), e)| self.process_event(x, y, e));
-            self.handler.flush().await;
-
+            self.process_events(scan, prev_scan);
             core::mem::swap(&mut scan, &mut prev_scan);
+
+            self.handler.flush().await;
+        }
+    }
+
+    fn process_events(&mut self, scan: &[[bool; W]; H], prev_scan: &[[bool; W]; H]) {
+        for y in 0..H {
+            for x in 0..W {
+                if let Some(event) = self.get_event(x, y, scan[y][x], prev_scan[y][x]) {
+                    self.process_event(x, y, event);
+                }
+            }
         }
     }
 
@@ -97,6 +107,7 @@ where
         match event {
             Event::Pressed => self.process_key_pressed(x, y),
             Event::Released => self.process_key_released(x, y),
+            Event::Held => self.process_key_held(x, y),
         }
     }
 
@@ -115,24 +126,61 @@ where
         }
     }
 
-    fn process_key_released(&mut self, x: usize, y: usize) {
-        let action = self.unset_action(x, y).unwrap();
-        self.process_action_released(action)
+    fn process_key_held(&mut self, x: usize, y: usize) {
+        let (action, _) = self.get_action(x, y).unwrap();
+        self.process_action_held(action);
     }
 
-    fn process_action_released(&mut self, action: Action) {
+    fn process_action_held(&mut self, action: Action) {
+        match action {
+            Action::TapHold(_, code) => self.handler.register_code(code),
+            _ => {}
+        }
+    }
+
+    fn process_key_released(&mut self, x: usize, y: usize) {
+        let (action, tapped) = self.unset_action(x, y).unwrap();
+        self.process_action_released(action, tapped)
+    }
+
+    fn process_action_released(&mut self, action: Action, tapped: bool) {
         match action {
             Action::Code(code) => self.handler.unregister_code(code),
+            Action::TapHold(code, _) if tapped => self.handler.temp_register_code(code),
+            Action::TapHold(_, code) => self.handler.unregister_code(code),
             Action::MomentaryLayer(layer) => self.action_map.unset_layer(layer),
             _ => {}
         }
     }
 
-    fn set_action(&mut self, x: usize, y: usize, action: Action) -> Option<Action> {
-        self.current_action[y][x].replace(action)
+    fn get_event(&mut self, x: usize, y: usize, scan: bool, prev_scan: bool) -> Option<Event> {
+        match (scan, prev_scan) {
+            (true, false) => Some(Event::Pressed),
+            (false, true) => Some(Event::Released),
+            (true,  true) => {
+                self.get_action_mut(x, y)
+                    .unwrap()
+                    .1
+                    .take_if(|p| p.elapsed() >= TAP_TIMEOUT)
+                    .map(|_| Event::Held)
+            },
+            _ => None
+        }
     }
 
-    fn unset_action(&mut self, x: usize, y: usize) -> Option<Action> {
-        self.current_action[y][x].take()
+    fn get_action(&self, x: usize, y: usize) -> Option<(Action, Option<Instant>)> {
+        self.current_action[y][x]
+    }
+
+    fn get_action_mut(&mut self, x: usize, y: usize) -> Option<&mut (Action, Option<Instant>)> {
+        self.current_action[y][x].as_mut()
+    }
+
+    fn set_action(&mut self, x: usize, y: usize, action: Action) -> Option<(Action, Option<Instant>)> {
+        self.current_action[y][x].replace((action, Some(Instant::now())))
+    }
+
+    fn unset_action(&mut self, x: usize, y: usize) -> Option<(Action, bool)> {
+        self.current_action[y][x].take().map(|(a, b)| (a, b.is_some()))
     }
 }
