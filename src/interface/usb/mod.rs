@@ -68,6 +68,7 @@ impl<'d, D: Driver<'d>> Interface for UsbInterface<'d, D> {
 pub struct UsbHandler<'d, D: Driver<'d>> {
     writer: HidWriter<'d, D, 8>,
     report: Report,
+    temp_report: Report,
 }
 
 impl<'d, D: Driver<'d>> UsbHandler<'d, D> {
@@ -75,20 +76,32 @@ impl<'d, D: Driver<'d>> UsbHandler<'d, D> {
         Self {
             writer,
             report: Report::new(),
+            temp_report: Report::new(),
         }
     }
 }
 
 impl<'d, D: Driver<'d>> Handler for UsbHandler<'d, D> {
     fn register_code(&mut self, code: Code) {
-        let _ = self.report.add(code);
+        if self.temp_report.add(code).is_ok() {
+            let _ = self.report.add(code);
+        }
     }
 
     fn unregister_code(&mut self, code: Code) {
         let _ = self.report.remove(code);
     }
 
+    fn temp_register_code(&mut self, code: Code) {
+        let _ = self.temp_report.add(code);
+    }
+
+    async fn ready(&mut self) {
+        self.writer.ready().await
+    }
+
     async fn flush(&mut self) {
-        let _ = self.writer.write(self.report.as_slice()).await;
+        let _ = self.writer.write(self.temp_report.as_slice()).await;
+        self.temp_report = self.report;
     }
 }
