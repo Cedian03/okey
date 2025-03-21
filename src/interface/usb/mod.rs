@@ -1,5 +1,3 @@
-#![allow(static_mut_refs)]
-
 mod code;
 mod config;
 mod handlers;
