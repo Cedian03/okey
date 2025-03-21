@@ -3,6 +3,8 @@
 mod counter;
 mod simple;
 
+use embassy_time::Duration;
+
 use crate::SCAN_INTERVAL;
 
 use super::Scan;
@@ -10,8 +12,8 @@ use super::Scan;
 pub use counter::Counter;
 pub use simple::Simple;
 
-const DEBOUNCE: u16 = 5; // ms
-const DEBOUNCE_COUNT: u16 = DEBOUNCE / (SCAN_INTERVAL as u16);
+const DEBOUNCE: Duration = Duration::from_millis(5);
+const DEBOUNCE_COUNT: u64 = DEBOUNCE.as_ticks() / SCAN_INTERVAL.as_ticks();
 
 pub const fn debounce<const W: usize, const H: usize>(scanner: impl Scan<W, H>) -> impl Scan<W, H> {
     Simple::new(scanner)

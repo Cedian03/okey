@@ -10,7 +10,7 @@ pub mod interface;
 pub mod scan;
 
 use embassy_futures::join;
-use embassy_time::{Duration, Instant};
+use embassy_time::{Duration, Instant, Ticker};
 
 use action::Action;
 use action_map::ActionMap;
@@ -18,7 +18,7 @@ use event::Event;
 use interface::{Handler, Interface};
 use scan::Scan;
 
-pub const SCAN_INTERVAL: u64 = 5; // ms
+pub const SCAN_INTERVAL: Duration = Duration::from_millis(1); // ms
 
 pub const TAP_TIMEOUT: Duration = Duration::from_millis(1000);
 
@@ -82,14 +82,16 @@ where
         let mut scan = &mut [[false; W]; H];
         let mut prev_scan = &mut [[false; W]; H];
 
-        loop {
-            self.handler.ready().await;
+        let mut ticker = Ticker::every(SCAN_INTERVAL);
 
+        loop {
             self.scanner.scan(scan).await; 
             self.process_events(scan, prev_scan);
+            self.handler.flush();
+            
             core::mem::swap(&mut scan, &mut prev_scan);
-
-            self.handler.flush().await;
+            
+            ticker.next().await;
         }
     }
 
@@ -157,7 +159,7 @@ where
         match (scan, prev_scan) {
             (true, false) => Some(Event::Pressed),
             (false, true) => Some(Event::Released),
-            (true,  true) => {
+            (true, true) => {
                 self.get_action_mut(x, y)
                     .unwrap()
                     .1
