@@ -61,7 +61,7 @@ struct RunningKeyboard<S, T, const W: usize, const H: usize, const D: usize> {
     scanner: S,
     action_map: ActionMap<W, H, D>,
     handler: T,
-    current_action: [[Option<(Action, Option<Instant>)>; W]; H], 
+    pressed: [[Option<Pressed>; W]; H], 
 }
 
 impl<S, T, const W: usize, const H: usize, const D: usize> RunningKeyboard<S, T,  W, H, D>
@@ -74,7 +74,7 @@ where
             scanner,
             action_map,
             handler,
-            current_action: [[None; W]; H],
+            pressed: [[None; W]; H],
         }
     }
 
@@ -115,7 +115,7 @@ where
 
     fn process_key_pressed(&mut self, x: usize, y: usize) {
         let action = self.action_map.get(x, y);
-        assert!(self.set_action(x, y, action).is_none());
+        assert!(self.register_pressed(x, y, action).is_none());
         self.process_action_pressed(action)
     }
 
@@ -129,7 +129,12 @@ where
     }
 
     fn process_key_held(&mut self, x: usize, y: usize) {
-        let (action, _) = self.get_action(x, y).unwrap();
+        let action = {
+            let pressed = self.get_pressed_mut(x, y).as_mut().unwrap();
+            pressed.processed_as_held = true;
+            pressed.action
+        };
+
         self.process_action_held(action);
     }
 
@@ -141,14 +146,14 @@ where
     }
 
     fn process_key_released(&mut self, x: usize, y: usize) {
-        let (action, tapped) = self.unset_action(x, y).unwrap();
-        self.process_action_released(action, tapped)
+        let (action, was_held) = self.register_released(x, y).unwrap();
+        self.process_action_released(action, !was_held)
     }
 
-    fn process_action_released(&mut self, action: Action, tapped: bool) {
+    fn process_action_released(&mut self, action: Action, was_tapped: bool) {
         match action {
             Action::Code(code) => self.handler.unregister_code(code),
-            Action::TapHold(code, _) if tapped => self.handler.temp_register_code(code),
+            Action::TapHold(code, _) if was_tapped => self.handler.temp_register_code(code),
             Action::TapHold(_, code) => self.handler.unregister_code(code),
             Action::MomentaryLayer(layer) => self.action_map.unset_layer(layer),
             _ => {}
@@ -159,30 +164,52 @@ where
         match (scan, prev_scan) {
             (true, false) => Some(Event::Pressed),
             (false, true) => Some(Event::Released),
-            (true, true) => {
-                self.get_action_mut(x, y)
+            (true, true) => 
+                self.get_pressed(x, y)
                     .unwrap()
-                    .1
-                    .take_if(|p| p.elapsed() >= TAP_TIMEOUT)
-                    .map(|_| Event::Held)
-            },
+                    .is_ready_to_be_held()
+                    .then_some(Event::Held),
             _ => None
         }
     }
 
-    fn get_action(&self, x: usize, y: usize) -> Option<(Action, Option<Instant>)> {
-        self.current_action[y][x]
+    fn register_pressed(&mut self, x: usize, y: usize, action: Action) -> Option<Pressed> {
+        self.get_pressed_mut(x, y)
+            .replace(Pressed::now(action))
     }
 
-    fn get_action_mut(&mut self, x: usize, y: usize) -> Option<&mut (Action, Option<Instant>)> {
-        self.current_action[y][x].as_mut()
+    fn register_released(&mut self, x: usize, y: usize) -> Option<(Action, bool)> {
+        self.get_pressed_mut(x, y)
+            .take()
+            .map(|x| (x.action, x.processed_as_held))
     }
 
-    fn set_action(&mut self, x: usize, y: usize, action: Action) -> Option<(Action, Option<Instant>)> {
-        self.current_action[y][x].replace((action, Some(Instant::now())))
+    fn get_pressed(&self, x: usize, y: usize) -> Option<Pressed> {
+        self.pressed[y][x]
     }
 
-    fn unset_action(&mut self, x: usize, y: usize) -> Option<(Action, bool)> {
-        self.current_action[y][x].take().map(|(a, b)| (a, b.is_some()))
+    fn get_pressed_mut(&mut self, x: usize, y: usize) -> &mut Option<Pressed> {
+        &mut self.pressed[y][x]
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Pressed {
+    action: Action,
+    since: Instant,
+    processed_as_held: bool,
+}
+
+impl Pressed {
+    fn now(action: Action) -> Self {
+        Self {
+            action,
+            since: Instant::now(),
+            processed_as_held: false,
+        }
+    }
+
+    fn is_ready_to_be_held(&self) -> bool {
+        !self.processed_as_held && self.since.elapsed() >= TAP_TIMEOUT
     }
 }
