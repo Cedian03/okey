@@ -415,3 +415,9 @@ pub const fn MO(layer: u8) -> Option<Action> {
 pub const fn TG(layer: u8) -> Option<Action> {
     Some(Action::ToggleLayer(layer))
 }
+
+/// Registers different codes when tapped or held.
+#[allow(non_snake_case)]
+pub const fn TH(tapped: Code, held: Code) -> Option<Action> {
+    Some(Action::TapHold(tapped, held))
+}
