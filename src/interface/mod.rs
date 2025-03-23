@@ -10,8 +10,8 @@ pub trait Interface
 }
 
 pub trait Handler {
-    fn register_code(&mut self, code: Code);
-    fn unregister_code(&mut self, code: Code);
-    fn temp_register_code(&mut self, code: Code);
+    fn register(&mut self, code: Code);
+    fn temp_register(&mut self, code: Code);
+    fn unregister(&mut self, code: Code);
     fn flush(&mut self);
 }

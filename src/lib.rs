@@ -121,7 +121,7 @@ where
 
     fn process_action_pressed(&mut self, action: Action) {
         match action {
-            Action::Code(code) => self.handler.register_code(code),
+            Action::Code(code) => self.handler.register(code),
             Action::MomentaryLayer(layer) => self.action_map.set_layer(layer),
             Action::ToggleLayer(layer) => self.action_map.toggle_layer(layer),
             _ => {}
@@ -140,7 +140,7 @@ where
 
     fn process_action_held(&mut self, action: Action) {
         match action {
-            Action::TapHold(_, code) => self.handler.register_code(code),
+            Action::TapHold(_, code) => self.handler.register(code),
             _ => {}
         }
     }
@@ -152,9 +152,9 @@ where
 
     fn process_action_released(&mut self, action: Action, was_tapped: bool) {
         match action {
-            Action::Code(code) => self.handler.unregister_code(code),
-            Action::TapHold(code, _) if was_tapped => self.handler.temp_register_code(code),
-            Action::TapHold(_, code) => self.handler.unregister_code(code),
+            Action::Code(code) => self.handler.unregister(code),
+            Action::TapHold(code, _) if was_tapped => self.handler.temp_register(code),
+            Action::TapHold(_, code) => self.handler.unregister(code),
             Action::MomentaryLayer(layer) => self.action_map.unset_layer(layer),
             _ => {}
         }

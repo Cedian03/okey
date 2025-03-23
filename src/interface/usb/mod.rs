@@ -26,14 +26,14 @@ pub use state::State;
 static SHARED_REPORT: Mutex<Cell<Report>> = Mutex::new(Cell::new(Report::new()));
 static WAS_REPORT_SENT: Mutex<Cell<bool>> = Mutex::new(Cell::new(false));
 
-pub struct UsbInterface<'a, T: Driver<'a>> {
-    device: UsbDevice<'a, T>,
-    _reader: HidReader<'a, T, 1>,
-    writer: HidWriter<'a, T, 8>,
+pub struct UsbInterface<'d, D: Driver<'d>> {
+    device: UsbDevice<'d, D>,
+    _reader: HidReader<'d, D, 1>,
+    writer: HidWriter<'d, D, 8>,
 }
 
-impl<'a, T: Driver<'a>> UsbInterface<'a, T> {
-    pub fn new(driver: T, config: Config<'a>, state: &'a mut State<'a>) -> Self {
+impl<'d, D: Driver<'d>> UsbInterface<'d, D> {
+    pub fn new(driver: D, config: Config<'d>, state: &'d mut State<'d>) -> Self {
         let (usb_config, hid_config) = config.split();
 
         let mut builder = Builder::new(
@@ -104,18 +104,18 @@ impl UsbHandler {
 }
 
 impl Handler for UsbHandler {
-    fn register_code(&mut self, code: Code) {
+    fn register(&mut self, code: Code) {
         if self.report.add(code).is_ok() {
             self.persistent_report.add(code).unwrap();
         }
     }
 
-    fn unregister_code(&mut self, code: Code) {
-        let _ = self.persistent_report.remove(code);
+    fn temp_register(&mut self, code: Code) {
+        let _ = self.report.add(code);
     }
 
-    fn temp_register_code(&mut self, code: Code) {
-        let _ = self.report.add(code);
+    fn unregister(&mut self, code: Code) {
+        let _ = self.persistent_report.remove(code);
     }
 
     fn flush(&mut self) {

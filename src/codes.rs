@@ -25,6 +25,24 @@ pub const KC_NO: Option<Action> = Some(Action::NoAction);
 /// Alias for [`KC_NO`].
 pub const XXXXXXX: Option<Action> = KC_NO;
 
+/// Activate `layer` while key is being held.
+#[allow(non_snake_case)]
+pub const fn MO(layer: u8) -> Option<Action> {
+    Some(Action::MomentaryLayer(layer))
+}
+
+/// Toggle active status of `layer`.
+#[allow(non_snake_case)]
+pub const fn TG(layer: u8) -> Option<Action> {
+    Some(Action::ToggleLayer(layer))
+}
+
+/// Registers different codes when tapped or held.
+#[allow(non_snake_case)]
+pub const fn TH(tapped: Code, held: Code) -> Option<Action> {
+    Some(Action::TapHold(tapped, held))
+}
+
 macro_rules! define_keys {
     ($(#[doc = $doc:literal] $ident:ident $(($($alias:ident),+))? => $code:expr),* $(,)?) => {
         $(
@@ -402,22 +420,4 @@ define_keys! {
     KC_RIGHT_ALT (KC_RALT) => Code::RightAlt,
     /// Keyboard `Right GUI`.
     KC_RIGHT_GUI (KC_RGUI, KC_RCMD, KC_RWIN) => Code::RightGUI,
-}
-
-/// Activate `layer` while key is being held.
-#[allow(non_snake_case)]
-pub const fn MO(layer: u8) -> Option<Action> {
-    Some(Action::MomentaryLayer(layer))
-}
-
-/// Toggle active status of `layer`.
-#[allow(non_snake_case)]
-pub const fn TG(layer: u8) -> Option<Action> {
-    Some(Action::ToggleLayer(layer))
-}
-
-/// Registers different codes when tapped or held.
-#[allow(non_snake_case)]
-pub const fn TH(tapped: Code, held: Code) -> Option<Action> {
-    Some(Action::TapHold(tapped, held))
 }
