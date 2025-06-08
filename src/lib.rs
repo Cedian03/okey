@@ -13,7 +13,7 @@ use embassy_futures::join;
 use embassy_time::{Duration, Instant, Ticker};
 
 use action::Action;
-use action_map::{LayeredMap, ActionMap};
+use action_map::{ActionMap, LayeredMap};
 use event::Event;
 use interface::{Handler, Interface};
 use scan::Scan;
@@ -47,7 +47,12 @@ where
         unreachable!()
     }
 
-    fn morph(self) -> (RunningKeyboard<S, LayeredMap<W, H, D>, I::Handler, W, H>, impl Future) {
+    fn morph(
+        self,
+    ) -> (
+        RunningKeyboard<S, LayeredMap<W, H, D>, I::Handler, W, H>,
+        impl Future,
+    ) {
         let (handler, fut) = self.interface.start();
 
         (
@@ -61,11 +66,12 @@ struct RunningKeyboard<S, M, T, const W: usize, const H: usize> {
     scanner: S,
     mapper: M,
     handler: T,
-    pressed: [[Option<Pressed>; W]; H], 
+    pressed: [[Option<Pressed>; W]; H],
 }
 
-impl<S, T, const W: usize, const H: usize, const D: usize> RunningKeyboard<S, LayeredMap<W, H, D>, T, W, H>
-where 
+impl<S, T, const W: usize, const H: usize, const D: usize>
+    RunningKeyboard<S, LayeredMap<W, H, D>, T, W, H>
+where
     S: Scan<W, H>,
     T: Handler,
 {
@@ -85,12 +91,12 @@ where
         let mut ticker = Ticker::every(SCAN_INTERVAL);
 
         loop {
-            self.scanner.scan(scan).await; 
+            self.scanner.scan(scan).await;
             self.process_events(scan, prev_scan);
             self.handler.flush();
-            
+
             core::mem::swap(&mut scan, &mut prev_scan);
-            
+
             ticker.next().await;
         }
     }
@@ -117,7 +123,6 @@ where
         if let Some(action) = self.mapper.get(x, y) {
             assert!(self.register_pressed(x, y, action).is_none());
             self.process_action_pressed(action)
-
         }
     }
 
@@ -166,18 +171,17 @@ where
         match (scan, prev_scan) {
             (true, false) => Some(Event::Pressed),
             (false, true) => Some(Event::Released),
-            (true, true) => 
-                self.get_pressed(x, y)
-                    .unwrap()
-                    .is_ready_to_be_held()
-                    .then_some(Event::Held),
-            _ => None
+            (true, true) => self
+                .get_pressed(x, y)
+                .unwrap()
+                .is_ready_to_be_held()
+                .then_some(Event::Held),
+            _ => None,
         }
     }
 
     fn register_pressed(&mut self, x: usize, y: usize, action: Action) -> Option<Pressed> {
-        self.get_pressed_mut(x, y)
-            .replace(Pressed::now(action))
+        self.get_pressed_mut(x, y).replace(Pressed::now(action))
     }
 
     fn register_released(&mut self, x: usize, y: usize) -> Option<(Action, bool)> {

@@ -17,4 +17,4 @@ const DEBOUNCE_COUNT: u64 = DEBOUNCE.as_ticks() / SCAN_INTERVAL.as_ticks();
 
 pub const fn debounce<const W: usize, const H: usize>(scanner: impl Scan<W, H>) -> impl Scan<W, H> {
     Simple::new(scanner)
-} 
+}

@@ -5,7 +5,7 @@ pub struct State<'a> {
     pub(super) bos_descriptor_buf: [u8; 256],
     pub(super) msos_descriptor_buf: [u8; 256],
     pub(super) control_buf: [u8; 64],
-    pub(super) hid_state: hid::State<'a>
+    pub(super) hid_state: hid::State<'a>,
 }
 
 impl<'a> State<'a> {

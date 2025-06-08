@@ -3,23 +3,20 @@ use core::convert::Infallible;
 use embassy_time::Timer;
 use embedded_hal::digital::{InputPin, OutputPin};
 
-use super::{debounce::debounce, Scan};
+use super::{Scan, debounce::debounce};
 
 pub struct Row2Col<I, O, const W: usize, const H: usize> {
     rows: [O; H],
     cols: [I; W],
 }
 
-impl<I, O, const W: usize, const H: usize> Row2Col<I, O, W, H> 
-where 
+impl<I, O, const W: usize, const H: usize> Row2Col<I, O, W, H>
+where
     I: InputPin<Error = Infallible>,
     O: OutputPin<Error = Infallible>,
 {
     pub const fn new(rows: [O; H], cols: [I; W]) -> Self {
-        Self {
-            rows,
-            cols,
-        }
+        Self { rows, cols }
     }
 
     pub const fn debounced(rows: [O; H], cols: [I; W]) -> impl Scan<W, H> {
@@ -27,8 +24,8 @@ where
     }
 }
 
-impl<I, O, const W: usize, const H: usize> Scan<W, H> for Row2Col<I, O, W, H> 
-where 
+impl<I, O, const W: usize, const H: usize> Scan<W, H> for Row2Col<I, O, W, H>
+where
     I: InputPin<Error = Infallible>,
     O: OutputPin<Error = Infallible>,
 {
@@ -39,7 +36,7 @@ where
             Timer::after_micros(30).await;
 
             for x in 0..W {
-                let col_pin =  &mut self.cols[x];
+                let col_pin = &mut self.cols[x];
                 buf[y][x] = col_pin.is_high().unwrap();
             }
 

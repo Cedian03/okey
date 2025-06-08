@@ -299,29 +299,29 @@ pub enum Code {
     Language8 = 0x97,
     /// Keyboard `Language 9`.
     Language9 = 0x98,
-    /// Keyboard `Alternate Erase`. 
+    /// Keyboard `Alternate Erase`.
     AlternateErase = 0x99,
-    /// Keyboard `SysReq/Attention`. 
+    /// Keyboard `SysReq/Attention`.
     SysReqAttention = 0x9A,
-    /// Keyboard `Cancel`. 
+    /// Keyboard `Cancel`.
     Cancel = 0x9B,
-    /// Keyboard `Clear`. 
+    /// Keyboard `Clear`.
     Clear = 0x9C,
-    /// Keyboard `Prior`. 
+    /// Keyboard `Prior`.
     Prior = 0x9D,
-    /// Keyboard `Return`. 
+    /// Keyboard `Return`.
     Return = 0x9E,
-    /// Keyboard `Separator`. 
+    /// Keyboard `Separator`.
     Separator = 0x9F,
-    /// Keyboard `Out`. 
+    /// Keyboard `Out`.
     Out = 0xA0,
-    /// Keyboard `Oper`. 
+    /// Keyboard `Oper`.
     Oper = 0xA1,
-    /// Keyboard `Clear/Again`. 
+    /// Keyboard `Clear/Again`.
     ClearAgain = 0xA2,
-    /// Keyboard `CrSel/Props`. 
+    /// Keyboard `CrSel/Props`.
     CrSelProps = 0xA3,
-    /// Keyboard `ExSel`. 
+    /// Keyboard `ExSel`.
     ExSel = 0xA4,
 
     /// Keyboard `Left Control`.

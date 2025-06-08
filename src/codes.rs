@@ -1,28 +1,28 @@
 //! QMK/TMK style keycodes for ease of configuration.
 
+use crate::action::Action;
 use crate::action_map::Opacity;
 use crate::interface::usb::Code;
-use crate::action::Action;
 
 /// Transparent.
-/// 
+///
 /// You might want to use one of the aliases: [`KC_TRNS`], [`_______`].
 pub const KC_TRANSPARENT: Opacity<Option<Action>> = Opacity::Transparent;
-/// Transparent. 
-/// 
+/// Transparent.
+///
 /// Alias for [`KC_TRANSPARENT`].
 pub const KC_TRNS: Opacity<Option<Action>> = KC_TRANSPARENT;
-/// Transparent. 
-/// 
+/// Transparent.
+///
 /// Alias for [`KC_TRANSPARENT`].
 pub const _______: Opacity<Option<Action>> = KC_TRANSPARENT;
 
 /// No action.
-/// 
+///
 /// You might want to use the alias: [`XXXXXXX`].
 pub const KC_NO: Opacity<Option<Action>> = Opacity::Opaque(None);
-/// No action. 
-/// 
+/// No action.
+///
 /// Alias for [`KC_NO`].
 pub const XXXXXXX: Opacity<Option<Action>> = KC_NO;
 

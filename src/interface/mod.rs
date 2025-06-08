@@ -2,8 +2,7 @@ pub mod usb;
 
 use usb::Code;
 
-pub trait Interface
-{
+pub trait Interface {
     type Handler: Handler;
 
     fn start(self) -> (Self::Handler, impl Future);

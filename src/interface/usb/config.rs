@@ -1,4 +1,4 @@
-use embassy_usb::{class::hid::Config as HidConfig, Config as UsbConfig};
+use embassy_usb::{Config as UsbConfig, class::hid::Config as HidConfig};
 
 use super::report::REPORT_DESCRIPTOR;
 

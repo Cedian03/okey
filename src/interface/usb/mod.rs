@@ -9,13 +9,12 @@ use core::cell::Cell;
 use critical_section::Mutex;
 use embassy_futures::join::join;
 use embassy_usb::{
-    class::hid::{HidReader, HidReaderWriter, HidWriter}, 
-    driver::Driver, 
-    Builder, 
-    UsbDevice
+    Builder, UsbDevice,
+    class::hid::{HidReader, HidReaderWriter, HidWriter},
+    driver::Driver,
 };
 
-use super::{Interface, Handler};
+use super::{Handler, Interface};
 
 pub use code::Code;
 pub use config::Config;
@@ -37,19 +36,16 @@ impl<'d, D: Driver<'d>> UsbInterface<'d, D> {
         let (usb_config, hid_config) = config.split();
 
         let mut builder = Builder::new(
-            driver, 
-            usb_config, 
+            driver,
+            usb_config,
             &mut state.config_descriptor_buf,
             &mut state.bos_descriptor_buf,
             &mut state.msos_descriptor_buf,
             &mut state.control_buf,
         );
 
-        let (_reader, writer) = HidReaderWriter::new(
-            &mut builder, 
-            &mut state.hid_state, 
-            hid_config
-        ).split();
+        let (_reader, writer) =
+            HidReaderWriter::new(&mut builder, &mut state.hid_state, hid_config).split();
 
         let device = builder.build();
 
@@ -82,10 +78,7 @@ impl<'d, D: Driver<'d>> Interface for UsbInterface<'d, D> {
             }
         };
 
-        (
-            UsbHandler::new(),
-            join( fut1, fut2)
-        )
+        (UsbHandler::new(), join(fut1, fut2))
     }
 }
 

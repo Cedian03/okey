@@ -1,4 +1,4 @@
-use embassy_usb::{class::hid::RequestHandler, Handler};
+use embassy_usb::{Handler, class::hid::RequestHandler};
 
 pub struct OkeyRequestHandler;
 
