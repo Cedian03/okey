@@ -13,30 +13,30 @@ use embassy_futures::join;
 use embassy_time::{Duration, Instant, Ticker};
 
 use action::Action;
-use action_map::ActionMap;
+use action_map::{LayeredMap, ActionMap};
 use event::Event;
 use interface::{Handler, Interface};
 use scan::Scan;
 
-pub const SCAN_INTERVAL: Duration = Duration::from_millis(1); // ms
+pub const SCAN_INTERVAL: Duration = Duration::from_millis(1);
 
 pub const TAP_TIMEOUT: Duration = Duration::from_millis(1000);
 
-pub struct Keyboard<S, I, const W: usize, const H: usize, const D: usize> {
+pub struct Keyboard<S, M, I, const W: usize, const H: usize> {
     scanner: S,
-    action_map: ActionMap<W, H, D>,
+    mapper: M,
     interface: I,
 }
 
-impl<S, I, const W: usize, const H: usize, const D: usize> Keyboard<S, I, W, H, D>
+impl<S, I, const W: usize, const H: usize, const D: usize> Keyboard<S, LayeredMap<W, H, D>, I, W, H>
 where
     S: Scan<W, H>,
     I: Interface,
 {
-    pub fn new<M: Into<ActionMap<W, H, D>>>(scanner: S, map: M, interface: I) -> Self {
+    pub fn new<M: Into<LayeredMap<W, H, D>>>(scanner: S, mapper: M, interface: I) -> Self {
         Self {
             scanner,
-            action_map: map.into(),
+            mapper: mapper.into(),
             interface,
         }
     }
@@ -47,32 +47,32 @@ where
         unreachable!()
     }
 
-    fn morph(self) -> (RunningKeyboard<S, I::Handler, W, H, D>, impl Future) {
+    fn morph(self) -> (RunningKeyboard<S, LayeredMap<W, H, D>, I::Handler, W, H>, impl Future) {
         let (handler, fut) = self.interface.start();
 
         (
-            RunningKeyboard::new(self.scanner, self.action_map, handler),
+            RunningKeyboard::new(self.scanner, self.mapper, handler),
             fut,
         )
     }
 }
 
-struct RunningKeyboard<S, T, const W: usize, const H: usize, const D: usize> {
+struct RunningKeyboard<S, M, T, const W: usize, const H: usize> {
     scanner: S,
-    action_map: ActionMap<W, H, D>,
+    mapper: M,
     handler: T,
     pressed: [[Option<Pressed>; W]; H], 
 }
 
-impl<S, T, const W: usize, const H: usize, const D: usize> RunningKeyboard<S, T,  W, H, D>
+impl<S, T, const W: usize, const H: usize, const D: usize> RunningKeyboard<S, LayeredMap<W, H, D>, T, W, H>
 where 
     S: Scan<W, H>,
     T: Handler,
 {
-    fn new(scanner: S, action_map: ActionMap<W, H, D>, handler: T) -> Self {
+    fn new(scanner: S, mapper: LayeredMap<W, H, D>, handler: T) -> Self {
         Self {
             scanner,
-            action_map,
+            mapper,
             handler,
             pressed: [[None; W]; H],
         }
@@ -114,16 +114,18 @@ where
     }
 
     fn process_key_pressed(&mut self, x: usize, y: usize) {
-        let action = self.action_map.get(x, y);
-        assert!(self.register_pressed(x, y, action).is_none());
-        self.process_action_pressed(action)
+        if let Some(action) = self.mapper.get(x, y) {
+            assert!(self.register_pressed(x, y, action).is_none());
+            self.process_action_pressed(action)
+
+        }
     }
 
     fn process_action_pressed(&mut self, action: Action) {
         match action {
             Action::Code(code) => self.handler.register(code),
-            Action::MomentaryLayer(layer) => self.action_map.set_layer(layer),
-            Action::ToggleLayer(layer) => self.action_map.toggle_layer(layer),
+            Action::MomentaryLayer(layer) => self.mapper.set_layer(layer),
+            Action::ToggleLayer(layer) => self.mapper.toggle_layer(layer),
             _ => {}
         }
     }
@@ -131,7 +133,7 @@ where
     fn process_key_held(&mut self, x: usize, y: usize) {
         let action = {
             let pressed = self.get_pressed_mut(x, y).as_mut().unwrap();
-            pressed.processed_as_held = true;
+            pressed.is_yet_to_be_held = false;
             pressed.action
         };
 
@@ -155,7 +157,7 @@ where
             Action::Code(code) => self.handler.unregister(code),
             Action::TapHold(code, _) if was_tapped => self.handler.temp_register(code),
             Action::TapHold(_, code) => self.handler.unregister(code),
-            Action::MomentaryLayer(layer) => self.action_map.unset_layer(layer),
+            Action::MomentaryLayer(layer) => self.mapper.unset_layer(layer),
             _ => {}
         }
     }
@@ -181,7 +183,7 @@ where
     fn register_released(&mut self, x: usize, y: usize) -> Option<(Action, bool)> {
         self.get_pressed_mut(x, y)
             .take()
-            .map(|x| (x.action, x.processed_as_held))
+            .map(|x| (x.action, x.is_yet_to_be_held))
     }
 
     fn get_pressed(&self, x: usize, y: usize) -> Option<Pressed> {
@@ -197,7 +199,7 @@ where
 struct Pressed {
     action: Action,
     since: Instant,
-    processed_as_held: bool,
+    is_yet_to_be_held: bool,
 }
 
 impl Pressed {
@@ -205,11 +207,11 @@ impl Pressed {
         Self {
             action,
             since: Instant::now(),
-            processed_as_held: false,
+            is_yet_to_be_held: true,
         }
     }
 
     fn is_ready_to_be_held(&self) -> bool {
-        !self.processed_as_held && self.since.elapsed() >= TAP_TIMEOUT
+        self.is_yet_to_be_held && self.since.elapsed() >= TAP_TIMEOUT
     }
 }

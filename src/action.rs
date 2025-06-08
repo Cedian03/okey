@@ -1,9 +1,7 @@
 use crate::interface::usb::Code;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub enum Action {
-    #[default]
-    NoAction,
     Code(Code),
     TapHold(Code, Code),
     MomentaryLayer(u8),

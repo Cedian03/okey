@@ -1,46 +1,47 @@
 //! QMK/TMK style keycodes for ease of configuration.
 
+use crate::action_map::Opacity;
 use crate::interface::usb::Code;
 use crate::action::Action;
 
 /// Transparent.
 /// 
 /// You might want to use one of the aliases: [`KC_TRNS`], [`_______`].
-pub const KC_TRANSPARENT: Option<Action> = None;
+pub const KC_TRANSPARENT: Opacity<Option<Action>> = Opacity::Transparent;
 /// Transparent. 
 /// 
 /// Alias for [`KC_TRANSPARENT`].
-pub const KC_TRNS: Option<Action> = KC_TRANSPARENT;
+pub const KC_TRNS: Opacity<Option<Action>> = KC_TRANSPARENT;
 /// Transparent. 
 /// 
 /// Alias for [`KC_TRANSPARENT`].
-pub const _______: Option<Action> = KC_TRANSPARENT;
+pub const _______: Opacity<Option<Action>> = KC_TRANSPARENT;
 
 /// No action.
 /// 
 /// You might want to use the alias: [`XXXXXXX`].
-pub const KC_NO: Option<Action> = Some(Action::NoAction);
+pub const KC_NO: Opacity<Option<Action>> = Opacity::Opaque(None);
 /// No action. 
 /// 
 /// Alias for [`KC_NO`].
-pub const XXXXXXX: Option<Action> = KC_NO;
+pub const XXXXXXX: Opacity<Option<Action>> = KC_NO;
 
 /// Activate `layer` while key is being held.
 #[allow(non_snake_case)]
-pub const fn MO(layer: u8) -> Option<Action> {
-    Some(Action::MomentaryLayer(layer))
+pub const fn MO(layer: u8) -> Opacity<Option<Action>> {
+    Opacity::Opaque(Some(Action::MomentaryLayer(layer)))
 }
 
 /// Toggle active status of `layer`.
 #[allow(non_snake_case)]
-pub const fn TG(layer: u8) -> Option<Action> {
-    Some(Action::ToggleLayer(layer))
+pub const fn TG(layer: u8) -> Opacity<Option<Action>> {
+    Opacity::Opaque(Some(Action::ToggleLayer(layer)))
 }
 
 /// Registers different codes when tapped or held.
 #[allow(non_snake_case)]
-pub const fn TH(tapped: Code, held: Code) -> Option<Action> {
-    Some(Action::TapHold(tapped, held))
+pub const fn TH(tapped: Code, held: Code) -> Opacity<Option<Action>> {
+    Opacity::Opaque(Some(Action::TapHold(tapped, held)))
 }
 
 macro_rules! define_keys {
@@ -51,13 +52,13 @@ macro_rules! define_keys {
                 #[doc = ""]
                 #[doc = format_alias_intro!($($alias),+)]
             )?
-            pub const $ident: Option<Action> = Some(Action::Code($code));
+            pub const $ident: Opacity<Option<Action>> = Opacity::Opaque(Some(Action::Code($code)));
 
             $($(
                 #[doc = $doc]
                 #[doc = ""]
                 #[doc = concat!("Alias for [`", stringify!($ident), "`].")]
-                pub const $alias: Option<Action> = $ident;
+                pub const $alias: Opacity<Option<Action>> = $ident;
             )*)?
         )*
     };

@@ -1,24 +1,23 @@
 use crate::action::Action;
 
-pub struct ActionMap<const W: usize, const H: usize, const D: usize> {
-    map: [[[Option<Action>; W]; H]; D],
+pub trait ActionMap<const W: usize, const H: usize> {
+    fn get(&self, x: usize, y: usize) -> Option<Action>;
+}
+
+pub struct LayeredMap<const W: usize, const H: usize, const D: usize> {
+    map: [[[Opacity<Option<Action>>; W]; H]; D],
     active_layers: u32,
 }
 
-impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H, D> {
-    pub const fn new(map: [[[Option<Action>; W]; H]; D]) -> Self {
-        Self { map, active_layers: 1 }
+impl<const W: usize, const H: usize, const D: usize> LayeredMap<W, H, D> {
+    pub const fn new(map: [[[Opacity<Option<Action>>; W]; H]; D]) -> Self {
+        Self {
+            map,
+            active_layers: 1,
+        }
     }
 
-    pub fn get(&self, x: usize, y: usize) -> Action {
-        (0..D)
-            .rev()
-            .filter(|z| self.is_active(*z as u8))
-            .find_map(|z| self.index(x, y, z))
-            .unwrap_or_default()
-    }
-
-    fn index(&self, x: usize, y: usize, z: usize) -> Option<Action> {
+    fn index(&self, x: usize, y: usize, z: usize) -> Opacity<Option<Action>> {
         self.map[z][y][x]
     }
 
@@ -47,8 +46,27 @@ impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H, D> {
     }
 }
 
-impl<const W: usize, const H: usize, const D: usize> From<[[[Option<Action>; W]; H]; D]> for ActionMap<W, H, D> {
-    fn from(map: [[[Option<Action>; W]; H]; D]) -> Self {
-        Self::new(map)
+impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H> for LayeredMap<W, H, D> {
+    fn get(&self, x: usize, y: usize) -> Option<Action> {
+        (0..D)
+            .rev()
+            .filter(|z| self.is_active(*z as u8))
+            .find_map(|z| self.index(x, y, z).into())
+            .unwrap_or_default()
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum Opacity<T> {
+    Opaque(T),
+    Transparent,
+}
+
+impl<T> Into<Option<T>> for Opacity<T> {
+    fn into(self) -> Option<T> {
+        match self {
+            Self::Opaque(x) => Some(x),
+            Self::Transparent => None,
+        }
     }
 }
