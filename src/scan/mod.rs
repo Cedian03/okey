@@ -1,4 +1,5 @@
 pub mod debounce;
+pub mod split;
 
 mod col2row;
 mod direct;
