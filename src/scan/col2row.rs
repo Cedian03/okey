@@ -30,13 +30,11 @@ where
     O: OutputPin<Error = Infallible>,
 {
     async fn scan(&mut self, buf: &mut [[bool; W]; H]) -> () {
-        for x in 0..W {
-            let col_pin = &mut self.cols[x];
+        for (x, col_pin) in self.cols.iter_mut().enumerate() {
             col_pin.set_high().unwrap();
             Timer::after_micros(30).await;
 
-            for y in 0..H {
-                let row_pin = &mut self.rows[y];
+            for (y, row_pin) in self.rows.iter_mut().enumerate() {
                 buf[y][x] = row_pin.is_high().unwrap();
             }
 

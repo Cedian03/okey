@@ -56,6 +56,12 @@ impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H> for Layered
     }
 }
 
+impl<const W: usize, const H: usize, const D: usize> From<[[[Opacity<Option<Action>>; W]; H]; D]> for LayeredMap<W, H, D> {
+    fn from(value: [[[Opacity<Option<Action>>; W]; H]; D]) -> Self {
+        Self::new(value)
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum Opacity<T> {
     Opaque(T),

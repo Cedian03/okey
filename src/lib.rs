@@ -11,6 +11,7 @@ pub mod event;
 pub mod interface;
 pub mod scan;
 
+use embedded_hal_async::i2c::I2c;
 use embassy_futures::join;
 use embassy_time::{Duration, Instant, Ticker};
 
