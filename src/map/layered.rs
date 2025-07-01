@@ -16,11 +16,11 @@ impl<const W: usize, const H: usize, const D: usize> LayeredMap<W, H, D> {
     const HEIGHT: u8 = H as u8;
     const DEPTH: u8 = D as u8;
 
-    pub fn new(map: [[[Opacity<Option<Action>>; W]; H]; D]) -> Self {
+    pub const fn new(map: [[[Opacity<Option<Action>>; W]; H]; D]) -> Self {
         Self::with_active(map, 1)
     }
 
-    pub fn with_active(map: [[[Opacity<Option<Action>>; W]; H]; D], active: u32) -> Self {
+    pub const fn with_active(map: [[[Opacity<Option<Action>>; W]; H]; D], active: u32) -> Self {
         Self { map, active }
     }
 
@@ -59,5 +59,47 @@ impl<T> Into<Option<T>> for Opacity<T> {
             Self::Opaque(x) => Some(x),
             Self::Transparent => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{codes::*, interface::usb::Code};
+
+    use super::*;
+
+    #[rustfmt::skip] 
+    const TEST_MAP: LayeredMap<2, 2, 2> = LayeredMap::with_active(
+        [
+            [
+                [KC_0,    KC_1   ],
+                [KC_NO,   KC_TRNS],
+            ],
+            [
+                [KC_A,    KC_TRNS],
+                [KC_TRNS, KC_TRNS],
+            ],
+        ],
+        0b11
+    );
+
+    #[test]
+    fn action_for_opaque_action() {
+        assert_eq!(TEST_MAP.get(0, 0), Some(Action::Code(Code::KeyboardA)));
+    }
+
+    #[test]
+    fn action_for_transparent_over_oaction() {
+        assert_eq!(TEST_MAP.get(1, 0), Some(Action::Code(Code::Keyboard1)));
+    }
+
+    #[test]
+    fn none_for_none() {
+        assert_eq!(TEST_MAP.get(0, 1), None);
+    }
+
+    #[test]
+    fn none_for_transparent() {
+        assert_eq!(TEST_MAP.get(1, 1), None);
     }
 }
