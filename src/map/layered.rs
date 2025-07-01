@@ -27,6 +27,18 @@ impl<const W: usize, const H: usize, const D: usize> LayeredMap<W, H, D> {
     pub fn is_active(&self, layer: u8) -> bool {
         self.active & (1 << layer) != 0
     }
+
+    pub fn activate_layer(&mut self, layer: u8) {
+        self.active |= 1 << layer;
+    }
+
+    pub fn deactivate_layer(&mut self, layer: u8) {
+        self.active &= !(1 << layer);
+    }
+
+    pub fn toggle_layer(&mut self, layer: u8) {
+        self.active ^= 1 << layer;
+    }
 }
 
 impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H> for LayeredMap<W, H, D> {

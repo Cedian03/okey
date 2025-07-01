@@ -1,8 +1,8 @@
 //! QMK/TMK style keycodes for ease of configuration.
 
 use crate::action::Action;
-use crate::action_map::Opacity;
 use crate::interface::usb::Code;
+use crate::map::Opacity;
 
 /// Transparent.
 ///

@@ -5,21 +5,22 @@
 pub mod prelude;
 
 pub mod action;
-pub mod action_map;
 pub mod codes;
 pub mod event;
 pub mod interface;
+pub mod map;
 pub mod scan;
 
-use embedded_hal_async::i2c::I2c;
 use embassy_futures::join;
 use embassy_time::{Duration, Instant, Ticker};
 
 use action::Action;
-use action_map::{ActionMap, LayeredMap};
 use event::Event;
 use interface::{Handler, Interface};
+use map::LayeredMap;
 use scan::Scan;
+
+use crate::map::ActionMap;
 
 pub const SCAN_INTERVAL: Duration = Duration::from_millis(1);
 
@@ -123,7 +124,7 @@ where
     }
 
     fn process_key_pressed(&mut self, x: usize, y: usize) {
-        if let Some(action) = self.mapper.get(x, y) {
+        if let Some(action) = self.mapper.get(x as u8, y as u8) {
             assert!(self.register_pressed(x, y, action).is_none());
             self.process_action_pressed(action)
         }
@@ -132,7 +133,7 @@ where
     fn process_action_pressed(&mut self, action: Action) {
         match action {
             Action::Code(code) => self.handler.register(code),
-            Action::MomentaryLayer(layer) => self.mapper.set_layer(layer),
+            Action::MomentaryLayer(layer) => self.mapper.activate_layer(layer),
             Action::ToggleLayer(layer) => self.mapper.toggle_layer(layer),
             _ => {}
         }
@@ -165,7 +166,7 @@ where
             Action::Code(code) => self.handler.unregister(code),
             Action::TapHold(code, _) if was_tapped => self.handler.temp_register(code),
             Action::TapHold(_, code) => self.handler.unregister(code),
-            Action::MomentaryLayer(layer) => self.mapper.unset_layer(layer),
+            Action::MomentaryLayer(layer) => self.mapper.deactivate_layer(layer),
             _ => {}
         }
     }
