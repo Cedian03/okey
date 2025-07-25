@@ -8,8 +8,12 @@ pub mod action;
 pub mod codes;
 pub mod event;
 pub mod interface;
+pub mod macros;
 pub mod map;
 pub mod scan;
+
+#[cfg(feature = "defmt")]
+use defmt;
 
 use embassy_futures::join;
 use embassy_time::{Duration, Instant, Ticker};
@@ -17,14 +21,12 @@ use embassy_time::{Duration, Instant, Ticker};
 use action::Action;
 use event::Event;
 use interface::{Handler, Interface};
-use map::LayeredMap;
+use map::{ActionMap, LayeredMap};
 use scan::Scan;
-
-use crate::map::ActionMap;
 
 pub const SCAN_INTERVAL: Duration = Duration::from_millis(1);
 
-pub const TAP_TIMEOUT: Duration = Duration::from_millis(1000);
+pub const DEFAULT_TAP_TIMEOUT: Duration = Duration::from_millis(200);
 
 pub struct Keyboard<S, M, I, const W: usize, const H: usize> {
     scanner: S,
@@ -46,6 +48,7 @@ where
     }
 
     pub async fn run(self) -> ! {
+        info!("Running keyboard loop");
         let (board, fut) = self.morph();
         join::join(board.run(), fut).await;
         unreachable!()
@@ -125,12 +128,23 @@ where
 
     fn process_key_pressed(&mut self, x: usize, y: usize) {
         if let Some(action) = self.mapper.get(x as u8, y as u8) {
-            assert!(self.register_pressed(x, y, action).is_none());
-            self.process_action_pressed(action)
+            if self.register_pressed(x, y, action).is_some() {
+                warn!(
+                    "Key at ({}, {}) was never released after being registered as pressed",
+                    x, y
+                )
+            }
+
+            self.process_action_pressed(x as u8, y as u8, action)
         }
     }
 
-    fn process_action_pressed(&mut self, action: Action) {
+    fn process_action_pressed(&mut self, x: u8, y: u8, action: Action) {
+        info!(
+            "Processing key pressed at ({}, {}) with action {}",
+            x, y, action
+        );
+
         match action {
             Action::Code(code) => self.handler.register(code),
             Action::MomentaryLayer(layer) => self.mapper.activate_layer(layer),
@@ -146,10 +160,15 @@ where
             pressed.action
         };
 
-        self.process_action_held(action);
+        self.process_action_held(x as u8, y as u8, action);
     }
 
-    fn process_action_held(&mut self, action: Action) {
+    fn process_action_held(&mut self, x: u8, y: u8, action: Action) {
+        info!(
+            "Processing key held at ({}, {}) with action {}",
+            x, y, action
+        );
+
         match action {
             Action::TapHold(_, code) => self.handler.register(code),
             _ => {}
@@ -157,11 +176,29 @@ where
     }
 
     fn process_key_released(&mut self, x: usize, y: usize) {
-        let (action, was_held) = self.register_released(x, y).unwrap();
-        self.process_action_released(action, !was_held)
+        if let Some((action, duration, was_tapped)) = self.register_released(x, y) {
+            self.process_action_released(x as u8, y as u8, action, duration, was_tapped)
+        } else {
+            warn!(
+                "Key at ({}, {}) was never registered as pressed before being released",
+                x, y
+            )
+        }
     }
 
-    fn process_action_released(&mut self, action: Action, was_tapped: bool) {
+    fn process_action_released(
+        &mut self,
+        x: u8,
+        y: u8,
+        action: Action,
+        duration: Duration,
+        was_tapped: bool,
+    ) {
+        info!(
+            "Processing key released at ({}, {}) with action {}",
+            x, y, action,
+        );
+
         match action {
             Action::Code(code) => self.handler.unregister(code),
             Action::TapHold(code, _) if was_tapped => self.handler.temp_register(code),
@@ -188,10 +225,10 @@ where
         self.get_pressed_mut(x, y).replace(Pressed::now(action))
     }
 
-    fn register_released(&mut self, x: usize, y: usize) -> Option<(Action, bool)> {
+    fn register_released(&mut self, x: usize, y: usize) -> Option<(Action, Duration, bool)> {
         self.get_pressed_mut(x, y)
             .take()
-            .map(|x| (x.action, x.is_yet_to_be_held))
+            .map(|x| (x.action, x.since.elapsed(), x.is_yet_to_be_held))
     }
 
     fn get_pressed(&self, x: usize, y: usize) -> Option<Pressed> {
@@ -220,6 +257,6 @@ impl Pressed {
     }
 
     fn is_ready_to_be_held(&self) -> bool {
-        self.is_yet_to_be_held && self.since.elapsed() >= TAP_TIMEOUT
+        self.is_yet_to_be_held && self.since.elapsed() >= DEFAULT_TAP_TIMEOUT
     }
 }

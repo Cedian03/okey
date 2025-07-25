@@ -1,5 +1,6 @@
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Code {
     /// Keyboard `a` and `A`.
     KeyboardA = 0x04,
