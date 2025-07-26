@@ -864,7 +864,6 @@ name = "okey"
 version = "0.1.0"
 dependencies = [
  "critical-section",
- "defmt",
  "embassy-executor",
  "embassy-futures",
  "embassy-time",
