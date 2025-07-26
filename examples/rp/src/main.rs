@@ -1,9 +1,9 @@
 #![no_std]
 #![no_main]
 
-use panic_probe as _;
 #[cfg(feature = "defmt")]
 use defmt_rtt as _;
+use panic_probe as _;
 
 use embassy_executor::Spawner;
 use embassy_rp::{
@@ -57,7 +57,5 @@ async fn main(_spawner: Spawner) {
         ]
     };
 
-    Keyboard::new(scanner, map, interface)
-        .run()
-        .await
+    Keyboard::new(scanner, map, interface).run().await
 }

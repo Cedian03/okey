@@ -59,6 +59,12 @@ impl<const W: usize, const H: usize, const D: usize> Index<[u8; 3]> for LayeredM
     }
 }
 
+impl<const W: usize, const H: usize, const D: usize> From<[[[Opacity<Option<Action>>; W]; H]; D]> for LayeredMap<W, H, D> {
+    fn from(map: [[[Opacity<Option<Action>>; W]; H]; D]) -> Self {
+        Self::new(map)
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum Opacity<T> {
     Opaque(T),

@@ -11,11 +11,8 @@ embassy-rp = { version = "0.3.0", features = ["rp2040", "critical-section-impl",
 cortex-m-rt = "0.7"
 panic-probe = "0.3.2"
 
-defmt-rtt = { version = "1.0.0", optional = true }
-defmt = { version = "1.0.1", optional = true }
-
-[features]
-defmt = ["dep:defmt", "dep:defmt-rtt", "okey/defmt"]
+defmt = "1.0.1"
+defmt-rtt = "1.0.0"
 
 [profile.release]
 debug = 2
