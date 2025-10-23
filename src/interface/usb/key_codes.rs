@@ -1,7 +1,7 @@
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub enum Code {
+pub enum KeyCode {
     /// Keyboard `a` and `A`.
     KeyboardA = 0x04,
     /// Keyboard `b` and `B`.
@@ -343,16 +343,22 @@ pub enum Code {
     RightGUI = 0xE7,
 }
 
-impl Code {
+impl KeyCode {
     pub fn modifier_mask(self) -> Option<u8> {
         self.modifier_index().map(|x| 1 << x)
     }
 
     pub fn modifier_index(self) -> Option<u8> {
-        self.is_modifier().then(|| self as u8 & 0x07)
+        self.is_modifier().then(|| u8::from(self) & 0x07)
     }
 
     pub fn is_modifier(self) -> bool {
         self >= Self::LeftControl && self <= Self::RightGUI
+    }
+}
+
+impl From<KeyCode> for u8 {
+    fn from(code: KeyCode) -> Self {
+        code as u8
     }
 }

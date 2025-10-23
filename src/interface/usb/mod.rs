@@ -1,6 +1,8 @@
-mod code;
+pub mod qmk_key_codes;
+
 mod config;
 mod handlers;
+mod key_codes;
 mod report;
 mod state;
 
@@ -14,11 +16,13 @@ use embassy_usb::{
     driver::Driver,
 };
 
+use crate::debug;
+
 use super::{Handler, Interface};
 
-pub use code::Code;
 pub use config::Config;
 pub use handlers::{OkeyDeviceHandler, OkeyRequestHandler};
+pub use key_codes::KeyCode;
 pub use report::{Report, ReportError};
 pub use state::State;
 
@@ -33,6 +37,7 @@ pub struct UsbInterface<'d, D: Driver<'d>> {
 
 impl<'d, D: Driver<'d>> UsbInterface<'d, D> {
     pub fn new(driver: D, config: Config<'d>, state: &'d mut State<'d>) -> Self {
+        debug!("Building USB interface with config: {}", config);
         let (usb_config, hid_config) = config.split();
 
         let mut builder = Builder::new(
@@ -61,10 +66,12 @@ impl<'d, D: Driver<'d>> Interface for UsbInterface<'d, D> {
     type Handler = UsbHandler;
 
     fn start(mut self) -> (Self::Handler, impl Future) {
+        debug!("Running USB device...");
         let fut1 = async move {
             self.device.run().await;
         };
 
+        debug!("Running USB report writer...");
         let fut2 = async move {
             loop {
                 self.writer.ready().await;
@@ -97,17 +104,17 @@ impl UsbHandler {
 }
 
 impl Handler for UsbHandler {
-    fn register(&mut self, code: Code) {
+    fn register(&mut self, code: KeyCode) {
         if self.report.add(code).is_ok() {
             self.persistent_report.add(code).unwrap();
         }
     }
 
-    fn temp_register(&mut self, code: Code) {
+    fn temp_register(&mut self, code: KeyCode) {
         let _ = self.report.add(code);
     }
 
-    fn unregister(&mut self, code: Code) {
+    fn unregister(&mut self, code: KeyCode) {
         let _ = self.persistent_report.remove(code);
     }
 

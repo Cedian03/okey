@@ -1,4 +1,4 @@
-use super::Code;
+use super::KeyCode;
 
 /// No event indicated.
 pub const NO_EVENT: u8 = 0x00;
@@ -65,7 +65,7 @@ impl Report {
         self.inner.as_slice()
     }
 
-    pub fn add(&mut self, code: Code) -> Result<(), ReportError> {
+    pub fn add(&mut self, code: KeyCode) -> Result<(), ReportError> {
         if let Some(mask) = code.modifier_mask() {
             self.inner.modifiers |= mask
         } else {
@@ -73,14 +73,14 @@ impl Report {
                 return Err(ReportError);
             }
 
-            self.inner.codes[self.len] = code as u8;
+            self.inner.codes[self.len] = u8::from(code);
             self.len += 1;
         }
 
         Ok(())
     }
 
-    pub fn remove(&mut self, code: Code) -> Result<(), ReportError> {
+    pub fn remove(&mut self, code: KeyCode) -> Result<(), ReportError> {
         if let Some(mask) = code.modifier_mask() {
             self.inner.modifiers &= !mask
         } else {

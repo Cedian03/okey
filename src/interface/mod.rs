@@ -1,6 +1,6 @@
 pub mod usb;
 
-use usb::Code;
+use usb::KeyCode;
 
 pub trait Interface {
     type Handler: Handler;
@@ -9,8 +9,8 @@ pub trait Interface {
 }
 
 pub trait Handler {
-    fn register(&mut self, code: Code);
-    fn temp_register(&mut self, code: Code);
-    fn unregister(&mut self, code: Code);
+    fn register(&mut self, code: KeyCode);
+    fn temp_register(&mut self, code: KeyCode);
+    fn unregister(&mut self, code: KeyCode);
     fn flush(&mut self);
 }

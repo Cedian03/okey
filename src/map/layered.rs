@@ -4,8 +4,10 @@ use crate::Action;
 
 use super::ActionMap;
 
+type Foo<T = Action> = Opacity<Option<T>>;
+
 pub struct LayeredMap<const W: usize, const H: usize, const D: usize> {
-    map: [[[Opacity<Option<Action>>; W]; H]; D],
+    map: [[[Foo; W]; H]; D],
     active: u32,
 }
 
@@ -16,11 +18,11 @@ impl<const W: usize, const H: usize, const D: usize> LayeredMap<W, H, D> {
     const HEIGHT: u8 = H as u8;
     const DEPTH: u8 = D as u8;
 
-    pub const fn new(map: [[[Opacity<Option<Action>>; W]; H]; D]) -> Self {
+    pub const fn new(map: [[[Foo; W]; H]; D]) -> Self {
         Self::with_active(map, 1)
     }
 
-    pub const fn with_active(map: [[[Opacity<Option<Action>>; W]; H]; D], active: u32) -> Self {
+    pub const fn with_active(map: [[[Foo; W]; H]; D], active: u32) -> Self {
         Self { map, active }
     }
 
@@ -52,15 +54,17 @@ impl<const W: usize, const H: usize, const D: usize> ActionMap<W, H> for Layered
 }
 
 impl<const W: usize, const H: usize, const D: usize> Index<[u8; 3]> for LayeredMap<W, H, D> {
-    type Output = Opacity<Option<Action>>;
+    type Output = Foo;
 
     fn index(&self, index: [u8; 3]) -> &Self::Output {
         &self.map[index[2] as usize][index[1] as usize][index[0] as usize]
     }
 }
 
-impl<const W: usize, const H: usize, const D: usize> From<[[[Opacity<Option<Action>>; W]; H]; D]> for LayeredMap<W, H, D> {
-    fn from(map: [[[Opacity<Option<Action>>; W]; H]; D]) -> Self {
+impl<const W: usize, const H: usize, const D: usize> From<[[[Foo; W]; H]; D]>
+    for LayeredMap<W, H, D>
+{
+    fn from(map: [[[Foo; W]; H]; D]) -> Self {
         Self::new(map)
     }
 }
@@ -82,7 +86,7 @@ impl<T> Into<Option<T>> for Opacity<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{codes::*, interface::usb::Code};
+    use crate::{interface::usb::KeyCode, qmk_key_codes::*};
 
     use super::*;
 
@@ -103,12 +107,12 @@ mod tests {
 
     #[test]
     fn action_for_opaque_action() {
-        assert_eq!(TEST_MAP.get(0, 0), Some(Action::Code(Code::KeyboardA)));
+        assert_eq!(TEST_MAP.get(0, 0), Some(Action::Code(KeyCode::KeyboardA)));
     }
 
     #[test]
     fn action_for_transparent_over_oaction() {
-        assert_eq!(TEST_MAP.get(1, 0), Some(Action::Code(Code::Keyboard1)));
+        assert_eq!(TEST_MAP.get(1, 0), Some(Action::Code(KeyCode::Keyboard1)));
     }
 
     #[test]

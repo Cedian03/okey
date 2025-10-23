@@ -1,22 +1,20 @@
 #![no_std]
-#![feature(generic_const_exprs)]
-#![allow(incomplete_features)]
 
 pub mod prelude;
+pub use interface::usb::qmk_key_codes;
 
-pub mod action;
-pub mod codes;
-pub mod event;
-pub mod interface;
-pub mod macros;
-pub mod map;
-pub mod scan;
-
-#[cfg(feature = "defmt")]
-use defmt;
+mod action;
+mod event;
+mod interface;
+mod macros;
+mod map;
+mod scan;
 
 use embassy_futures::join;
 use embassy_time::{Duration, Instant, Ticker};
+
+#[cfg(feature = "defmt")]
+use defmt;
 
 use action::Action;
 use event::Event;
@@ -48,7 +46,7 @@ where
     }
 
     pub async fn run(self) -> ! {
-        info!("Running keyboard loop");
+        info!("Running keyboard main task...");
         let (board, fut) = self.morph();
         join::join(board.run(), fut).await;
         unreachable!()
@@ -60,6 +58,7 @@ where
         RunningKeyboard<S, LayeredMap<W, H, D>, I::Handler, W, H>,
         impl Future,
     ) {
+        debug!("Running interface tasks...");
         let (handler, fut) = self.interface.start();
 
         (
@@ -95,6 +94,7 @@ where
         let mut scan = &mut [[false; W]; H];
         let mut prev_scan = &mut [[false; W]; H];
 
+        debug!("Running keyboard main loop...");
         let mut ticker = Ticker::every(SCAN_INTERVAL);
 
         loop {
@@ -140,7 +140,7 @@ where
     }
 
     fn process_action_pressed(&mut self, x: u8, y: u8, action: Action) {
-        info!(
+        debug!(
             "Processing key pressed at ({}, {}) with action {}",
             x, y, action
         );
@@ -164,13 +164,13 @@ where
     }
 
     fn process_action_held(&mut self, x: u8, y: u8, action: Action) {
-        info!(
+        debug!(
             "Processing key held at ({}, {}) with action {}",
             x, y, action
         );
 
         match action {
-            Action::TapHold(_, code) => self.handler.register(code),
+            Action::TapHold { hold, .. } => self.handler.register(hold),
             _ => {}
         }
     }
@@ -194,15 +194,15 @@ where
         duration: Duration,
         was_tapped: bool,
     ) {
-        info!(
+        debug!(
             "Processing key released at ({}, {}) with action {}",
             x, y, action,
         );
 
         match action {
             Action::Code(code) => self.handler.unregister(code),
-            Action::TapHold(code, _) if was_tapped => self.handler.temp_register(code),
-            Action::TapHold(_, code) => self.handler.unregister(code),
+            Action::TapHold { tap, .. } if was_tapped => self.handler.temp_register(tap),
+            Action::TapHold { hold, .. } => self.handler.unregister(hold),
             Action::MomentaryLayer(layer) => self.mapper.deactivate_layer(layer),
             _ => {}
         }

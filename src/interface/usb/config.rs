@@ -2,6 +2,7 @@ use embassy_usb::{Config as UsbConfig, class::hid::Config as HidConfig};
 
 use super::report::REPORT_DESCRIPTOR;
 
+#[derive(Clone, Copy, Debug)]
 pub struct Config<'a> {
     /// Vendor ID. Default: 0x1209.
     vid: u16,
@@ -15,6 +16,22 @@ pub struct Config<'a> {
     serial_number: Option<&'a str>,
     /// Polling interval in ms. Default: 10.
     poll_interval: u8,
+}
+
+#[cfg(feature = "defmt")]
+impl<'a> defmt::Format for Config<'a> {
+    fn format(&self, f: defmt::Formatter) {
+        defmt::write!(
+            f,
+            "Config {{ vid: {:#04x}, pid: {:#04x}, manufacturer: {:?}, product: {:?}, serial_number: {:?}, poll_interval: {} }}",
+            self.vid,
+            self.pid,
+            self.manufacturer,
+            self.product,
+            self.serial_number,
+            self.poll_interval
+        )
+    }
 }
 
 impl<'a> Config<'a> {

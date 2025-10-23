@@ -5,7 +5,7 @@ pub use crate::{
     action::Action,
     interface::{
         Handler, Interface,
-        usb::{Code, Config, State, UsbInterface},
+        usb::{Config, KeyCode, State, UsbInterface},
     },
     map::LayeredMap,
     scan::{Col2Row, Row2Col, Scan},

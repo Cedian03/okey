@@ -1,0 +1,7 @@
+# nrf targets
+[target.thumbv7em-none-eabihf]
+
+# rp targets 
+[target.thumbv6m-none-eabi]
+runner = "probe-rs run --chip RP2040"
+rustflags = ["-C", "link-arg=-Tlink.x", "-C", "link-arg=--nmagic"]

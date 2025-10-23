@@ -20,6 +20,8 @@ bind_interrupts!(struct Irqs {
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
+    defmt::info!("Hello, world!");
+
     let p = embassy_rp::init(Default::default());
 
     let driver = Driver::new(p.USB, Irqs);
@@ -42,17 +44,11 @@ async fn main(_spawner: Spawner) {
     };
 
     let map = {
-        use okey::codes::*;
+        use okey::qmk_key_codes::*;
 
         [
-            [
-                [KC_A,    KC_ENTR],
-                [KC_B,    TG(1)  ],
-            ],
-            [
-                [KC_1,    KC_LCTL],
-                [KC_2,    _______],
-            ],
+            [[KC_A, KC_ENTR], [KC_B, TG(1)]],
+            [[KC_1, KC_LCTL], [KC_2, _______]],
         ]
     };
 

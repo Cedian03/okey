@@ -1,0 +1,31 @@
+[package]
+name = "pro_micro"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+okey = { path = "../../" }
+
+embassy-executor = { version = "0.9.1", features = [
+    "executor-thread",
+    "arch-cortex-m",
+] }
+cortex-m-rt = "0.7"
+panic-probe = "1.0.0"
+
+# nRF52840 dependencies
+embassy-nrf = { version = "0.8.0", features = [
+    "nrf52840",
+    "time",
+], optional = true }
+
+# rp2040 dependencies
+embassy-rp = { version = "0.8.0", features = [
+    "rp2040",
+    "critical-section-impl",
+    "time-driver",
+], optional = true }
+
+[features]
+nrf52840 = ["dep:embassy-nrf"]
+rp2040 = ["dep:embassy-rp"]
