@@ -1,39 +1,44 @@
 #[macro_export]
+#[collapse_debuginfo(yes)]
 macro_rules! error {
     ($($arg:tt)*) => {
         #[cfg(feature = "defmt")]
-        $crate::defmt::error!($($arg)*)
+        ::defmt::error!($($arg)*)
     };
 }
 
 #[macro_export]
+#[collapse_debuginfo(yes)]
 macro_rules! warn {
     ($($arg:tt)*) => {
         #[cfg(feature = "defmt")]
-        $crate::defmt::warn!($($arg)*)
+        ::defmt::warn!($($arg)*)
     };
 }
 
 #[macro_export]
+#[collapse_debuginfo(yes)]
 macro_rules! info {
     ($($arg:tt)*) => {
         #[cfg(feature = "defmt")]
-        $crate::defmt::info!($($arg)*)
+        ::defmt::info!($($arg)*)
     };
 }
 
 #[macro_export]
+#[collapse_debuginfo(yes)]
 macro_rules! debug {
     ($($arg:tt)*) => {
         #[cfg(feature = "defmt")]
-        $crate::defmt::debug!($($arg)*)
+        ::defmt::debug!($($arg)*)
     };
 }
 
 #[macro_export]
+#[collapse_debuginfo(yes)]
 macro_rules! trace {
     ($($arg:tt)*) => {
         #[cfg(feature = "defmt")]
-        $crate::defmt::trace!($($arg)*)
+        ::defmt::trace!($($arg)*)
     };
 }
