@@ -15,19 +15,23 @@ use embassy_usb::{
     class::hid::{HidReader, HidReaderWriter, HidWriter},
     driver::Driver,
 };
+use static_cell::StaticCell;
 
-use crate::debug;
+use crate::{debug, interface::usb::handlers::OkeyDeviceHandler, trace};
+
+use report::Report;
 
 use super::{Handler, Interface};
 
 pub use config::Config;
-pub use handlers::{OkeyDeviceHandler, OkeyRequestHandler};
 pub use key_codes::KeyCode;
-pub use report::{Report, ReportError};
+pub use report::Modifiers;
 pub use state::State;
 
 static SHARED_REPORT: Mutex<Cell<Report>> = Mutex::new(Cell::new(Report::new()));
 static WAS_REPORT_SENT: Mutex<Cell<bool>> = Mutex::new(Cell::new(false));
+
+static DEVICE_HANDLER: StaticCell<OkeyDeviceHandler> = StaticCell::new();
 
 pub struct UsbInterface<'d, D: Driver<'d>> {
     device: UsbDevice<'d, D>,
@@ -49,6 +53,9 @@ impl<'d, D: Driver<'d>> UsbInterface<'d, D> {
             &mut state.control_buf,
         );
 
+        // TODO: This handler does nothing except log some info, that might be an issue.
+        builder.handler(DEVICE_HANDLER.try_init_with(|| OkeyDeviceHandler).unwrap());
+
         let (_reader, writer) =
             HidReaderWriter::new(&mut builder, &mut state.hid_state, hid_config).split();
 
@@ -66,13 +73,13 @@ impl<'d, D: Driver<'d>> Interface for UsbInterface<'d, D> {
     type Handler = UsbHandler;
 
     fn start(mut self) -> (Self::Handler, impl Future) {
-        debug!("Running USB device...");
         let fut1 = async move {
+            debug!("Running USB device...");
             self.device.run().await;
         };
 
-        debug!("Running USB report writer...");
         let fut2 = async move {
+            debug!("Running USB report writer...");
             loop {
                 self.writer.ready().await;
 
@@ -119,6 +126,8 @@ impl Handler for UsbHandler {
     }
 
     fn flush(&mut self) {
+        trace!("Flushing USB report: {}", self.report);
+
         let sent = critical_section::with(|cs| {
             SHARED_REPORT.borrow(cs).set(self.report);
             WAS_REPORT_SENT.borrow(cs).replace(false)

@@ -1,5 +1,7 @@
+use super::Modifiers;
+
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum KeyCode {
     /// Keyboard `a` and `A`.
@@ -344,8 +346,9 @@ pub enum KeyCode {
 }
 
 impl KeyCode {
-    pub fn modifier_mask(self) -> Option<u8> {
-        self.modifier_index().map(|x| 1 << x)
+    pub fn modifier_mask(self) -> Option<Modifiers> {
+        self.modifier_index()
+            .map(|x| Modifiers::from_bits(1 << x).unwrap())
     }
 
     pub fn modifier_index(self) -> Option<u8> {
@@ -353,12 +356,57 @@ impl KeyCode {
     }
 
     pub fn is_modifier(self) -> bool {
-        self >= Self::LeftControl && self <= Self::RightGUI
+        match self {
+            KeyCode::LeftControl
+            | KeyCode::LeftShift
+            | KeyCode::LeftAlt
+            | KeyCode::LeftGUI
+            | KeyCode::RightControl
+            | KeyCode::RightShift
+            | KeyCode::RightAlt
+            | KeyCode::RightGUI => true,
+            _ => false,
+        }
     }
 }
 
 impl From<KeyCode> for u8 {
     fn from(code: KeyCode) -> Self {
         code as u8
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_modifiers() {
+        assert_eq!(
+            KeyCode::LeftControl.modifier_mask(),
+            Some(Modifiers::LEFT_CONTROL)
+        );
+        assert_eq!(
+            KeyCode::LeftShift.modifier_mask(),
+            Some(Modifiers::LEFT_SHIFT)
+        );
+        assert_eq!(KeyCode::LeftAlt.modifier_mask(), Some(Modifiers::LEFT_ALT));
+        assert_eq!(KeyCode::LeftGUI.modifier_mask(), Some(Modifiers::LEFT_GUI));
+        assert_eq!(
+            KeyCode::RightControl.modifier_mask(),
+            Some(Modifiers::RIGHT_CONTROL)
+        );
+        assert_eq!(
+            KeyCode::RightShift.modifier_mask(),
+            Some(Modifiers::RIGHT_SHIFT)
+        );
+        assert_eq!(
+            KeyCode::RightAlt.modifier_mask(),
+            Some(Modifiers::RIGHT_ALT)
+        );
+        assert_eq!(
+            KeyCode::RightGUI.modifier_mask(),
+            Some(Modifiers::RIGHT_GUI)
+        );
     }
 }

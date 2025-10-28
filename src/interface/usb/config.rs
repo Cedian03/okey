@@ -1,6 +1,11 @@
 use embassy_usb::{Config as UsbConfig, class::hid::Config as HidConfig};
+use static_cell::StaticCell;
+
+use crate::interface::usb::handlers::OkeyRequestHandler;
 
 use super::report::REPORT_DESCRIPTOR;
+
+static REQUEST_HANDLER: StaticCell<OkeyRequestHandler> = StaticCell::new();
 
 #[derive(Clone, Copy, Debug)]
 pub struct Config<'a> {
@@ -20,9 +25,9 @@ pub struct Config<'a> {
 
 #[cfg(feature = "defmt")]
 impl<'a> defmt::Format for Config<'a> {
-    fn format(&self, f: defmt::Formatter) {
+    fn format(&self, fmt: defmt::Formatter) {
         defmt::write!(
-            f,
+            fmt,
             "Config {{ vid: {:#04x}, pid: {:#04x}, manufacturer: {:?}, product: {:?}, serial_number: {:?}, poll_interval: {} }}",
             self.vid,
             self.pid,
@@ -46,7 +51,7 @@ impl<'a> Config<'a> {
         }
     }
 
-    pub(super) const fn split(self) -> (UsbConfig<'a>, HidConfig<'a>) {
+    pub(super) fn split(self) -> (UsbConfig<'a>, HidConfig<'a>) {
         let mut usb = UsbConfig::new(self.vid, self.pid);
         usb.manufacturer = self.manufacturer;
         usb.product = self.product;
@@ -54,7 +59,12 @@ impl<'a> Config<'a> {
 
         let hid = HidConfig {
             report_descriptor: REPORT_DESCRIPTOR,
-            request_handler: None,
+            // TODO: This handler does nothing expect log some info, that might be an issue.
+            request_handler: Some(
+                REQUEST_HANDLER
+                    .try_init_with(|| OkeyRequestHandler)
+                    .unwrap(),
+            ),
             poll_ms: self.poll_interval,
             max_packet_size: usb.max_packet_size_0 as u16,
         };

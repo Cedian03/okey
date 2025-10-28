@@ -1,3 +1,5 @@
+use core::fmt::{Debug, Formatter};
+
 use super::KeyCode;
 
 /// No event indicated.
@@ -47,7 +49,7 @@ pub const REPORT_DESCRIPTOR: &[u8] = &[
 #[derive(Clone, Copy, Debug)]
 pub struct ReportError;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct Report {
     inner: Inner,
     len: usize,
@@ -65,15 +67,23 @@ impl Report {
         self.inner.as_slice()
     }
 
+    fn modifiers(&self) -> Modifiers {
+        self.inner.modifiers
+    }
+
+    fn key_codes(&self) -> &[u8] {
+        &self.inner.key_codes[..self.len]
+    }
+
     pub fn add(&mut self, code: KeyCode) -> Result<(), ReportError> {
         if let Some(mask) = code.modifier_mask() {
             self.inner.modifiers |= mask
         } else {
-            if self.len >= self.inner.codes.len() {
+            if self.len >= self.inner.key_codes.len() {
                 return Err(ReportError);
             }
 
-            self.inner.codes[self.len] = u8::from(code);
+            self.inner.key_codes[self.len] = u8::from(code);
             self.len += 1;
         }
 
@@ -84,45 +94,66 @@ impl Report {
         if let Some(mask) = code.modifier_mask() {
             self.inner.modifiers &= !mask
         } else {
-            let code = code as u8;
+            let code = u8::from(code);
 
             let mut i = 0;
 
-            while i < self.len && self.inner.codes[i] != code {
+            while i < self.len && self.inner.key_codes[i] != code {
                 i += 1;
             }
 
-            if self.inner.codes[i] != code {
+            if self.inner.key_codes[i] != code {
                 return Err(ReportError);
             }
 
             while i < self.len - 1 {
-                self.inner.codes.swap(i, i + 1);
+                self.inner.key_codes.swap(i, i + 1);
                 i += 1;
             }
 
             self.len -= 1;
-            self.inner.codes[self.len] = NO_EVENT;
+            self.inner.key_codes[self.len] = NO_EVENT;
         }
 
         Ok(())
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+impl Debug for Report {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Report")
+            .field("modifiers", &self.modifiers())
+            .field("key_codes", &self.key_codes())
+            .finish()
+    }
+}
+
+#[cfg(feature = "defmt")]
+impl defmt::Format for Report {
+    fn format(&self, fmt: defmt::Formatter) {
+        defmt::write!(
+            fmt,
+            "Report {{ modifiers: {}, key_codes: {} }}",
+            self.modifiers(),
+            self.key_codes(),
+        )
+    }
+}
+
 #[repr(C)]
+#[derive(Clone, Copy, Debug)]
 struct Inner {
-    modifiers: u8,
+    modifiers: Modifiers,
     _reserved: u8,
-    codes: [u8; 6],
+    key_codes: [u8; 6],
 }
 
 impl Inner {
     const fn new() -> Self {
         Self {
-            modifiers: 0,
+            modifiers: Modifiers::empty(),
             _reserved: 0,
-            codes: [NO_EVENT; 6],
+            key_codes: [NO_EVENT; 6],
         }
     }
 
@@ -140,5 +171,26 @@ impl Inner {
 impl Default for Inner {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+bitflags::bitflags! {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct Modifiers: u8 {
+        const LEFT_CONTROL = 0b0000_0001;
+        const LEFT_SHIFT = 0b0000_0010;
+        const LEFT_ALT = 0b0000_0100;
+        const LEFT_GUI = 0b0000_1000;
+        const RIGHT_CONTROL = 0b0001_0000;
+        const RIGHT_SHIFT = 0b0010_0000;
+        const RIGHT_ALT = 0b0100_0000;
+        const RIGHT_GUI = 0b1000_0000;
+    }
+}
+
+#[cfg(feature = "defmt")]
+impl defmt::Format for Modifiers {
+    fn format(&self, fmt: defmt::Formatter) {
+        defmt::write!(fmt, "Modifiers(0x{:08x})", self.bits())
     }
 }

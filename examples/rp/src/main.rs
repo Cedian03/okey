@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+#[cfg(feature = "defmt")]
 use defmt_rtt as _;
 use panic_probe as _;
 
@@ -20,7 +21,8 @@ bind_interrupts!(struct Irqs {
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
-    defmt::info!("Hello, world!");
+    #[cfg(feature = "defmt")]
+    defmt::info!("Hello, world! This is the okey/rp example.");
 
     let p = embassy_rp::init(Default::default());
 
