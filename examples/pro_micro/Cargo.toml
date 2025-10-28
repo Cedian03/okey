@@ -17,6 +17,7 @@ panic-probe = "1.0.0"
 embassy-nrf = { version = "0.8.0", features = [
     "nrf52840",
     "time",
+    "nfc-pins-as-gpio",
 ], optional = true }
 
 # rp2040 dependencies

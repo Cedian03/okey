@@ -1,0 +1,15 @@
+default: 
+    @just --choose
+
+run-nrf: (_run "nrf52840" "thumbv7em-none-eabihf")
+
+run-rp: (_run "rp2040" "thumbv6m-none-eabi")
+    
+# Build and flash target
+_run chip target: (_build chip target) (_flash chip "target/" + target + "/release/pro_micro")
+
+_build features target:
+    cargo build --release --features={{features}} --target={{target}} --quiet
+
+_flash chip path:
+    probe-rs run --chip {{chip}} {{path}}

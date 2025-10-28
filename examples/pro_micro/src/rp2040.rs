@@ -5,8 +5,6 @@ use embassy_rp::{
     usb::{Driver, InterruptHandler},
 };
 
-use okey::prelude::*;
-
 use crate::Init;
 
 bind_interrupts!(struct Irqs {
@@ -19,12 +17,14 @@ pub fn init<'d>() -> Init<Driver<'d, USB>, Output<'d>, Input<'d>> {
     Init {
         driver: Driver::new(p.USB, Irqs),
         cols: [
-            Output::new(p.PIN_0, Level::Low),
-            Output::new(p.PIN_1, Level::Low),
+            Output::new(p.PIN_2, Level::Low),
+            Output::new(p.PIN_3, Level::Low),
+            Output::new(p.PIN_4, Level::Low),
         ],
         rows: [
-            Input::new(p.PIN_10, Pull::Down),
-            Input::new(p.PIN_11, Pull::Down),
+            Input::new(p.PIN_5, Pull::Down),
+            Input::new(p.PIN_23, Pull::Down),
+            Input::new(p.PIN_21, Pull::Down),
         ],
     }
 }

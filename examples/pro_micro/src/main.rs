@@ -21,8 +21,8 @@ use okey::prelude::*;
 
 struct Init<D, C, R> {
     driver: D,
-    cols: [C; 2],
-    rows: [R; 2],
+    cols: [C; 3],
+    rows: [R; 3],
 }
 
 #[embassy_executor::main]
@@ -37,10 +37,11 @@ async fn main(_spawner: Spawner) {
     let map = {
         use okey::qmk_key_codes::*;
 
-        [
-            [[KC_A, KC_ENTR], [KC_B, TG(1)]],
-            [[KC_1, KC_LCTL], [KC_2, _______]],
-        ]
+        [[
+            [KC_KP_7, KC_KP_8, KC_KP_9],
+            [KC_KP_4, KC_KP_5, KC_KP_6],
+            [KC_KP_1, KC_KP_2, KC_KP_3],
+        ]]
     };
 
     Keyboard::new(scanner, map, interface).run().await
